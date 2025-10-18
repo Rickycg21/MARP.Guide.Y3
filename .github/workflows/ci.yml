@@ -1,0 +1,16 @@
+name: CI MARP
+
+#Run yaml flow when pushes or pull request are made on both main and develop branches
+on:
+  push:
+    branches:
+      - main
+      - develop
+      
+  pull_request:
+    branches:
+      - main
+      - develop
+
+  
+    
