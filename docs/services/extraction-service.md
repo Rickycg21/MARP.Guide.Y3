@@ -5,8 +5,8 @@ Convert downloaded PDFs into structured text and metadata.
 Publishes extraction results to indexing service.
 
 ## Data Owned
-- `/data/text/` — extracted plain text per PDF
-- `text_metadata.jsonl` — extraction metadata
+- `/data/text/` — extracted plain text files per PDF referenced by *DocumentExtracted.data.text_path*
+- `text_metadata.jsonl` — per-document extraction metadata (document_id, page_count, token_count, extracted_by, extracted_at)
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
@@ -22,4 +22,3 @@ Publishes extraction results to indexing service.
 ## Talks To
 - RabbitMQ (event broker)
 - Persistent volume (`/data`)
-- Ingestion Service (for PDF metadata)
