@@ -1,0 +1,61 @@
+#Version of docker we use (most recent)
+version: "3.9"
+
+#Containers for each service
+services: 
+  ingestion:
+    build: ./services/ingestion
+    container_name: ingestion-service
+    ports:
+      - "8000:8000"
+    networks:
+      - marp_net
+
+  extraction:
+    build: ./services/extraction
+    container_name: extraction-service
+    ports: 
+      - "8001:8000"
+    networks:
+      - marp_net
+
+  indexing:
+    build: ./services/indexing
+    container_name: indexing-service
+    ports:
+      - "8002:8000"
+    networks:
+      - marp_net
+
+  retrieval:
+    build: ./services/retrieval
+    container_name: retrieval-service
+    ports:
+      - "8003:8000"
+    networks:
+      - marp_net
+
+  chat:
+    build: ./services/chat
+    container_name: chat-service
+    ports:
+      - "8004:8000"
+    networks:
+      - marp_net
+
+  monitoring:
+    build: ./services/monitoring
+    container_name: monitoring-service
+    ports:
+      - "8005:8000"
+    networks:
+      - marp_net
+
+#Name the network for containers to comunicate
+networks:
+  marp_net:
+    driver: bridge
+    
+  
+    
+    
