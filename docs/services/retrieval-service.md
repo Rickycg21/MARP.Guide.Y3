@@ -4,7 +4,7 @@
 Perform semantic and keyword searches over the indexed content, returning ranked chunks for question answering.
 
 ## Data Owned
-- `/data/queries/` — cached queries and results
+- `/data/query_metadata.jsonl` — query metadata (query_id, query_text, top_k, result[document id, page, title, score], retrieval_time_ms)
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
@@ -18,5 +18,5 @@ Perform semantic and keyword searches over the indexed content, returning ranked
 
 ## Talks To
 - RabbitMQ (event broker)
-- Indexing Service (vector store)
-- Hybrid search engine (Tier-2 feature)
+- Persistent volume (`/data`)
+- Vector database (shared under /data/index/)

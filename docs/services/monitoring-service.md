@@ -4,7 +4,8 @@
 Aggregate and display system health, service metrics, and event throughput for the entire RAG pipeline.
 
 ## Data Owned
-- `/data/metrics/` — service metrics snapshots
+- `/data/metrics/events.log` — append-only event log capturing all consumed events for traceability
+- `/data/metrics/counters.json` — aggregated service metrics (health_status{}, event_counts{}, avg_latency_ms{})
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |

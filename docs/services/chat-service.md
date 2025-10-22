@@ -4,7 +4,7 @@
 Provide conversational interface that answers user questions using retrieved chunks and LLM completions.
 
 ## Data Owned
-*(none)*
+- `/data/answer_metadata.jsonl` — answer metadata (session_id, query_id, answer, citations[], tokens_used, model, latency_ms)
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
@@ -18,5 +18,6 @@ Provide conversational interface that answers user questions using retrieved chu
 
 ## Talks To
 - RabbitMQ (event broker)
-- Retrieval Service
+- Persistent volume (`/data`)
+- Retrieval Service (GET /search)
 - OpenAI LLM API (via service layer)
