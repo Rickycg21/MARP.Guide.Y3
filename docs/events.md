@@ -134,6 +134,7 @@ flowchart TD
   I[Ingestion] -->|DocumentDiscovered| E[Extraction]
   E -->|DocumentExtracted| X[Indexing]
   X -->|ChunksIndexed| R[Retrieval]
+  R -->|RetrievalCompleted| C[Chat]
   R -->|RetrievalCompleted| M[Monitoring]
-  C[Chat] -->|AnswerGenerated| M
+  C -->|AnswerGenerated| M[Monitoring]
 ```
