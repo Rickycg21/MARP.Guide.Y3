@@ -4,7 +4,7 @@
 Perform semantic and keyword searches over the indexed content, returning ranked chunks for question answering.
 
 ## Data Owned
-- `/data/query_metadata.jsonl` — query metadata (query_id, query_text, top_k, result[document id, page, title, score], retrieval_time_ms)
+- `/data/query_metadata.jsonl` — query metadata (query_id, query_text, top_k, results[document id, page, title, score], retrieval_time_ms)
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
