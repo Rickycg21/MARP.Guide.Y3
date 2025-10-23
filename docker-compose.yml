@@ -1,159 +1,169 @@
-#Version of docker we use (most recent)
 version: "3.9"
 
-#Containers for each service
-services: 
-
+services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"     #Open port for events 
-      - "15672:15672"   #Administration portal UI
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Web UI
     environment:
-    #User and password for administration 
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
-
-    #Save data in "/var/lib/rabbitmq" (default route for rabbitmq) even if conatiner is down
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin}
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks: [marp_net]
     restart: unless-stopped
-    networks:
-      - marp_net
-      
+
   ingestion:
     build: ./services/ingestion
     container_name: ingestion-service
-    ports:
-      - "8000:8000"
     environment:
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-    depends_on:
-      - rabbitmq
-    healthcheck:
-      # Check 8000 port inside container
-      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - SERVICE_NAME=ingestion
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+    ports:
+      - "5001:8000"
     volumes:
-      - shared_data:/data
-    networks:
-      - marp_net
+      - data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
 
   extraction:
     build: ./services/extraction
     container_name: extraction-service
-    ports: 
-      - "8001:8000"
     environment:
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-    depends_on:
-      - rabbitmq
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - SERVICE_NAME=extraction
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+    ports:
+      - "5002:8000"
     volumes:
-      - shared_data:/data
-    networks:
-      - marp_net
+      - data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
 
   indexing:
     build: ./services/indexing
     container_name: indexing-service
-    ports:
-      - "8002:8000"
     environment:
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-    depends_on:
-      - rabbitmq
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - SERVICE_NAME=indexing
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - CHROMA_DIR=/data/index
+    ports:
+      - "5003:8000"
     volumes:
-      - shared_data:/data
-    networks:
-      - marp_net
+      - data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
 
   retrieval:
     build: ./services/retrieval
     container_name: retrieval-service
-    ports:
-      - "8003:8000"
     environment:
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-    depends_on:
-      - rabbitmq
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - SERVICE_NAME=retrieval
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - CHROMA_DIR=/data/index
+    ports:
+      - "5004:8000"
     volumes:
-      - shared_data:/data
-    networks:
-      - marp_net
+      - data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
 
   chat:
     build: ./services/chat
     container_name: chat-service
-    ports:
-      - "8004:8000"
     environment:
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-    depends_on:
-      - rabbitmq
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - SERVICE_NAME=chat
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - ANSWERS_FILE=/data/answer_metadata.jsonl
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=openrouter/gpt-4o-mini
+      - RETRIEVAL_URL=http://retrieval:8000
+    ports:
+      - "5005:8000"
     volumes:
-      - shared_data:/data
-    networks:
-      - marp_net
+      - data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      retrieval:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
 
   monitoring:
     build: ./services/monitoring
     container_name: monitoring-service
-    ports:
-      - "8005:8000"
     environment:
-      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
-    depends_on:
-      - rabbitmq
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+      - SERVICE_NAME=monitoring
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+    ports:
+      - "5006:8000"
     volumes:
-      - shared_data:/data
-    networks:
-      - marp_net
+      - data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
 
-#Define folders for stored data from containers
 volumes:
+  data:
   rabbitmq_data:
-  shared_data:
-  
-#Name the network for containers to comunicate
+
 networks:
   marp_net:
     driver: bridge
