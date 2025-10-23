@@ -3,11 +3,48 @@ version: "3.9"
 
 #Containers for each service
 services: 
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     #Open port for events 
+      - "15672:15672"   #Administration portal UI
+    environment:
+    #User and password for administration 
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+
+    #Save data in "/var/lib/rabbitmq" (default route for rabbitmq) even if conatiner is down
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - marp_net
+      
   ingestion:
     build: ./services/ingestion
     container_name: ingestion-service
     ports:
       - "8000:8000"
+    environment:
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+    healthcheck:
+      # Check 8000 port inside container
+      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - shared_data:/data
     networks:
       - marp_net
 
@@ -16,6 +53,18 @@ services:
     container_name: extraction-service
     ports: 
       - "8001:8000"
+    environment:
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - shared_data:/data
     networks:
       - marp_net
 
@@ -24,6 +73,18 @@ services:
     container_name: indexing-service
     ports:
       - "8002:8000"
+    environment:
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - shared_data:/data
     networks:
       - marp_net
 
@@ -32,6 +93,18 @@ services:
     container_name: retrieval-service
     ports:
       - "8003:8000"
+    environment:
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - shared_data:/data
     networks:
       - marp_net
 
@@ -40,6 +113,18 @@ services:
     container_name: chat-service
     ports:
       - "8004:8000"
+    environment:
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - shared_data:/data
     networks:
       - marp_net
 
@@ -48,9 +133,26 @@ services:
     container_name: monitoring-service
     ports:
       - "8005:8000"
+    environment:
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8000)); s.close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - shared_data:/data
     networks:
       - marp_net
 
+#Define folders for stored data from containers
+volumes:
+  rabbitmq_data:
+  shared_data:
+  
 #Name the network for containers to comunicate
 networks:
   marp_net:
@@ -59,3 +161,4 @@ networks:
   
     
     
+
