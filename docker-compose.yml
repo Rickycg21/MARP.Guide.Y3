@@ -28,6 +28,7 @@ services:
       - SERVICE_PORT=5001
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
       - DATA_SOURCE=https://www.lancaster.ac.uk/academic-standards-and-quality/regulations-and-policies/manual-of-academic-regulations-and-procedures/
     ports:
       - "5001:8000"
@@ -52,6 +53,7 @@ services:
       - SERVICE_PORT=5002
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
     ports:
       - "5002:8000"
     volumes:
@@ -75,6 +77,7 @@ services:
       - SERVICE_PORT=5003
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
       - CHROMA_DIR=/data/index
     ports:
       - "5003:8000"
@@ -99,6 +102,7 @@ services:
       - SERVICE_PORT=5004
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
       - CHROMA_DIR=/data/index
     ports:
       - "5004:8000"
@@ -123,6 +127,7 @@ services:
       - SERVICE_PORT=5005
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
       - ANSWERS_FILE=/data/answer_metadata.jsonl
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - OPENROUTER_MODEL=openrouter/gpt-4o-mini
@@ -152,6 +157,7 @@ services:
       - SERVICE_PORT=5006
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
     ports:
       - "5006:8000"
     volumes:
