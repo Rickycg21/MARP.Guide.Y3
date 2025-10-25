@@ -25,8 +25,10 @@ services:
     container_name: ingestion-service
     environment:
       - SERVICE_NAME=ingestion
+      - SERVICE_PORT=5001
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
+      - DATA_SOURCE=https://www.lancaster.ac.uk/academic-standards-and-quality/regulations-and-policies/manual-of-academic-regulations-and-procedures/
     ports:
       - "5001:8000"
     volumes:
@@ -47,6 +49,7 @@ services:
     container_name: extraction-service
     environment:
       - SERVICE_NAME=extraction
+      - SERVICE_PORT=5002
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
     ports:
@@ -69,6 +72,7 @@ services:
     container_name: indexing-service
     environment:
       - SERVICE_NAME=indexing
+      - SERVICE_PORT=5003
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
       - CHROMA_DIR=/data/index
@@ -92,6 +96,7 @@ services:
     container_name: retrieval-service
     environment:
       - SERVICE_NAME=retrieval
+      - SERVICE_PORT=5004
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
       - CHROMA_DIR=/data/index
@@ -115,6 +120,7 @@ services:
     container_name: chat-service
     environment:
       - SERVICE_NAME=chat
+      - SERVICE_PORT=5005
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
       - ANSWERS_FILE=/data/answer_metadata.jsonl
@@ -143,6 +149,7 @@ services:
     container_name: monitoring-service
     environment:
       - SERVICE_NAME=monitoring
+      - SERVICE_PORT=5006
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
     ports:

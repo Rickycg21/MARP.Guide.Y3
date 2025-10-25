@@ -15,7 +15,7 @@ Aggregate and display system health, service metrics, and event throughput for t
 | GET | `/health` | Health check | 200 OK |
 
 ## Events
-- **Consumes:** `AnswerGenerated`
+- **Consumes:** `RetrievalCompleted` &`AnswerGenerated`
 - **Publishes:** *(none)*
 
 ## Talks To
