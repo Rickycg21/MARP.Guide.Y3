@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - develop
+      - feature/ci.yml
       
   pull_request:
     branches:
