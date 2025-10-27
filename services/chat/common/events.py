@@ -57,7 +57,7 @@ def new_event(
         eventId=str(uuid.uuid4()),
         timestamp=now_iso(),
         correlationId=correlation_id,
-        source=source or settings.service_Name, # default to current service
+        source=source or settings.service_name, # default to current service
         version=version,
         payload=payload,
     )
@@ -125,7 +125,7 @@ async def publish_event(event: EventEnvelope) -> None:
         body=body,
         content_type="application/json",
         delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-        message_id=event.id,
+        message_id=event.eventId,
         timestamp=datetime.fromisoformat(event.timestamp.replace("Z", "+00:00")),
         correlation_id=event.correlationId,
         headers={"eventType": event.eventType, "version": event.version},
