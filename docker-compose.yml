@@ -24,7 +24,7 @@ services:
     build: ./services/ingestion
     container_name: ingestion-service
     environment:
-      - SERVICE_NAME=ingestion
+      - SERVICE_NAME=ingestion-service
       - SERVICE_PORT=5001
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
@@ -49,7 +49,7 @@ services:
     build: ./services/extraction
     container_name: extraction-service
     environment:
-      - SERVICE_NAME=extraction
+      - SERVICE_NAME=extraction-service
       - SERVICE_PORT=5002
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
@@ -73,7 +73,7 @@ services:
     build: ./services/indexing
     container_name: indexing-service
     environment:
-      - SERVICE_NAME=indexing
+      - SERVICE_NAME=indexing-service
       - SERVICE_PORT=5003
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
@@ -98,7 +98,7 @@ services:
     build: ./services/retrieval
     container_name: retrieval-service
     environment:
-      - SERVICE_NAME=retrieval
+      - SERVICE_NAME=retrieval-service
       - SERVICE_PORT=5004
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
@@ -123,7 +123,7 @@ services:
     build: ./services/chat
     container_name: chat-service
     environment:
-      - SERVICE_NAME=chat
+      - SERVICE_NAME=chat-service
       - SERVICE_PORT=5005
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
@@ -153,7 +153,7 @@ services:
     build: ./services/monitoring
     container_name: monitoring-service
     environment:
-      - SERVICE_NAME=monitoring
+      - SERVICE_NAME=monitoring-service
       - SERVICE_PORT=5006
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
