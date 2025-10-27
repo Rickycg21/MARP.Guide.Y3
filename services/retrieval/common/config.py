@@ -15,11 +15,11 @@ from dataclasses import dataclass
 # -----------------------------------------------------------------------------
 @dataclass(frozen=True) # frozen=True makes the instance read-only after creation
 class Settings:
-    service_name: str
-    service_port: int
-    rabbitmq_url: str
-    data_root: str
-    log_level: str # One of: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    service_Name: str
+    service_Port: int
+    rabbitmq_URL: str
+    data_Root: str
+    log_Level: str # One of: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 # -----------------------------------------------------------------------------
 # Small helpers for robust environment variable parsing
@@ -55,7 +55,7 @@ def setup_logging(level: str) -> None:
     # Set up the root logger. All child loggers inherit this.
     logging.basicConfig(
         # Example output:
-        # 2025-10-25 12:34:56,789 INFO [src.common.config] Loaded settings ...
+        # 2025-10-25 12:34:56,789 INFO [config] Loaded settings ...
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
         level=getattr(logging, level.upper(), logging.INFO) # Fallback to INFO on bad input
     )
@@ -82,26 +82,25 @@ def get_settings() -> Settings:
     # Configure logging
     setup_logging(log_level)
     # Log a concise startup summary following the configured format
-    # Module name becomes the [logger name] in output
-    # Output: %(asctime)s INFO [src.common.config] Loaded settings ...
-    logging.getLogger(__name__).info(
+    # Output: %(asctime)s INFO [config] Loaded settings ...
+    logging.getLogger("config").info(
         "Loaded settings service=%s port=%s data_root=%s rabbitmq=%s",
         service_name, service_port, data_root, rabbitmq_url
     )
 
     # Build and return an immutable Settings object
     return Settings(
-        service_name=service_name,
-        service_port=service_port,
-        rabbitmq_url=rabbitmq_url,
-        data_root=data_root,
-        log_level=log_level,
+        service_Name=service_name,
+        service_Port=service_port,
+        rabbitmq_URL=rabbitmq_url,
+        data_Root=data_root,
+        log_Level=log_level,
     )
 
 
 # -----------------------------------------------------------------------------
 # Public, module-level singleton
 # -----------------------------------------------------------------------------
-# Import this from anywhere in your service: from src.common.config import settings
+# Import this from anywhere in your service: from common.config import settings
 # This triggers get_settings() once (per process) and reuses it afterwards.
 settings = get_settings()
