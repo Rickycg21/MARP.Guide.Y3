@@ -65,6 +65,10 @@ jobs:
             unhealthy_count=$(docker ps --filter "health=unhealthy" -q | wc -l) 
             started_count=$(docker ps --filter "health=starting" -q | wc -l)
 
+            # If variables are empty, set them to 0
+            unhealthy_count=${unhealthy_count:-0}
+            starting_count=${starting_count:-0}
+
             echo "Attempt $attempt| unhealthy: $unhealthy_count | starting: $starting_count"
           
             # If no unhealthy or starting containers remain: success
