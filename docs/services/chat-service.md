@@ -20,4 +20,4 @@ Provide conversational interface that answers user questions using retrieved chu
 - RabbitMQ (event broker)
 - Persistent volume (`/data`)
 - Retrieval Service (GET /search)
-- OpenAI LLM API (via service layer)
+- OpenRouter LLM API (via service layer)

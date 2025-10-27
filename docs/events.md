@@ -7,7 +7,7 @@ All events follow a shared JSON envelope format and are published to durable AMQ
 
 ## Event Catalogue
 
-| **Event Name** | **Published By** | **Consumed By** | **Purpose** | **Key Fields in `data`** |
+| **Event Name** | **Published By** | **Consumed By** | **Purpose** | **Key Fields in `payload`** |
 |----------------|------------------|-----------------|--------------|---------------------------|
 | **DocumentDiscovered** | Ingestion Service | Extraction Service | Signals that a new MARP PDF has been discovered and downloaded. | `document_id`, `title`, `url`, `download_path`, `pages`, `discovered_at` |
 | **DocumentExtracted** | Extraction Service | Indexing Service | Confirms that text and metadata were successfully extracted from a PDF. | `document_id`, `text_path`, `page_count`, `token_count`, `metadata` |
