@@ -15,11 +15,11 @@ from dataclasses import dataclass
 # -----------------------------------------------------------------------------
 @dataclass(frozen=True) # frozen=True makes the instance read-only after creation
 class Settings:
-    service_Name: str
-    service_Port: int
-    rabbitmq_URL: str
-    data_Root: str
-    log_Level: str # One of: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    service_name: str
+    service_port: int
+    rabbitmq_url: str
+    data_root: str
+    log_level: str  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 # -----------------------------------------------------------------------------
 # Small helpers for robust environment variable parsing
@@ -90,11 +90,11 @@ def get_settings() -> Settings:
 
     # Build and return an immutable Settings object
     return Settings(
-        service_Name=service_name,
-        service_Port=service_port,
-        rabbitmq_URL=rabbitmq_url,
-        data_Root=data_root,
-        log_Level=log_level,
+        service_name=service_name,
+        service_port=service_port,
+        rabbitmq_url=rabbitmq_url,
+        data_root=data_root,
+        log_level=log_level,
     )
 
 

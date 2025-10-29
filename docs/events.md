@@ -153,5 +153,4 @@ flowchart TD
   X -->|ChunksIndexed| R[Retrieval]
   R -->|RetrievalCompleted| M[Monitoring]
   C[Chat] -->|AnswerGenerated| M
-  R -->|RetrievalCompleted (REST to Chat)| C
 ```
