@@ -47,12 +47,16 @@ services:
     container_name: extraction-service
     environment:
       - SERVICE_NAME=extraction
-      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672/
       - DATA_ROOT=/data
+      - EVENT_EXCHANGE=events
+      - QUEUE_NAME=extraction.doc_fetched
+      - FORCE_REEXTRACT=false
+      - LOG_LEVEL=INFO
     ports:
       - "5002:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
