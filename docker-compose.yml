@@ -57,7 +57,7 @@ services:
     ports:
       - "5002:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -82,7 +82,7 @@ services:
     ports:
       - "5003:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -107,7 +107,7 @@ services:
     ports:
       - "5004:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -135,7 +135,7 @@ services:
     ports:
       - "5005:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -161,7 +161,7 @@ services:
     ports:
       - "5006:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -174,14 +174,8 @@ services:
     restart: unless-stopped
 
 volumes:
-  data:
   rabbitmq_data:
 
 networks:
   marp_net:
     driver: bridge
-    
-  
-    
-    
-
