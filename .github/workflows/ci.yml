@@ -1,4 +1,4 @@
-name: CI MARP
+name: CI - MARP Docker Services
 
 #Run yaml flow when pushes or pull request are made on both main and develop branches
 on:
@@ -6,11 +6,92 @@ on:
     branches:
       - main
       - develop
+      - feature/ci.yml
       
   pull_request:
     branches:
       - main
       - develop
 
-  
+jobs:
+  docker-services:
+    runs-on: ubuntu-latest
+
+    env:
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin
+      #Test key for chat container
+      OPENROUTER_API_KEY: test_key
+
+    steps:
+      # Make source code is available for the workflow
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up Docker instance
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      #Delete unnecesary tools to free up disk space
+      - name: Free up disk space
+        run: |
+          echo "Cleaning instance space"
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/lib/android"
+          sudo apt clean
+
+          # Delete posible unused Docker data
+          docker system prune -af || true
+
+      #Build and start the Docker services defined in the docker-compose.ci.yml file
+      - name: Start Docker services
+        run: docker compose -f docker-compose.yml up -d --build
+
+      # For debugging purposes, show running containers
+      - name: Show running containers
+        run: docker compose ps
+
+      #Run all health checks to ensure services are running properly
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for services to be healthy..."
+
+          # Maximum number of attempts (10 x 5s = 50 seconds total wait time)
+          max_attempts=10
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+
+            unhealthy_count=$(docker ps --filter "health=unhealthy" -q | wc -l) 
+            started_count=$(docker ps --filter "health=starting" -q | wc -l)
+
+            # If variables are empty, set them to 0
+            unhealthy_count=${unhealthy_count:-0}
+            starting_count=${starting_count:-0}
+
+            echo "Attempt $attempt| unhealthy: $unhealthy_count | starting: $starting_count"
+          
+            # If no unhealthy or starting containers remain: success
+            if [ "$unhealthy_count" -eq 0 ] && [ "$starting_count" -eq 0 ]; then
+              echo "All containers are healthy"
+              docker compose ps
+              exit 0
+            fi
+
+            sleep 5
+            attempt=$((attempt + 1))
+          done
+
+          # If some containers never became healthy failed test
+          echo "Some containers are still unhealthy or starting after $max_attempts attempts."
+          docker compose ps
+          docker compose logs
+          exit 1
+
+      #Stop and remove the Docker containers after tests are done
+      - name: Stop Docker services
+        if: always()
+        run: docker compose -f docker-compose.yml down -v
+
+
     

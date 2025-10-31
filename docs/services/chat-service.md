@@ -13,11 +13,11 @@ Provide conversational interface that answers user questions using retrieved chu
 | GET | `/health` | Health check | 200 OK |
 
 ## Events
-- **Consumes:** `RetrievalCompleted`
+- **Consumes:**   *(none)*
 - **Publishes:** `AnswerGenerated`
 
 ## Talks To
 - RabbitMQ (event broker)
 - Persistent volume (`/data`)
 - Retrieval Service (GET /search)
-- OpenAI LLM API (via service layer)
+- OpenRouter LLM API (via service layer)
