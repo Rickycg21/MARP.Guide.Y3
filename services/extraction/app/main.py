@@ -7,6 +7,7 @@ from uuid import uuid4
 import aio_pika
 from aio_pika import ExchangeType, DeliveryMode
 from fastapi import FastAPI
+from fastapi import HTTPException
 import pdfplumber
 
 from common.config import settings
@@ -56,6 +57,32 @@ def _bump(**delta):
         f.flush(); os.fsync(f.fileno())
     os.replace(tmp_path, COUNTERS_PATH)
 
+# --- metadata log (one JSON object per line) ---
+_METADATA_LOG = os.path.join(_DATA_ROOT, "text_metadata.jsonl")
+
+def _append_metadata_from_event(evt: dict) -> None:
+    """
+    Append a payload-shaped record to text_metadata.jsonl.
+    Safe to call in both 'skip' and 'fresh extraction' branches.
+    """
+    rec = {
+        "documentId": evt["payload"]["documentId"],
+        "textPath":   evt["payload"]["textPath"],
+        "pageCount":  evt["payload"]["pageCount"],
+        "tokenCount": evt["payload"]["tokenCount"],
+        "metadata":   evt["payload"]["metadata"],
+        # Optional traceability:
+        "correlationId": evt.get("correlationId"),
+        "eventId":       evt.get("eventId"),
+        "source":        evt.get("source"),
+        "writtenAt":     datetime.now(timezone.utc).isoformat(),
+    }
+    os.makedirs(os.path.dirname(_METADATA_LOG), exist_ok=True)
+    with open(_METADATA_LOG, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, ensure_ascii=False))
+        f.write("\n")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": settings.service_name}
@@ -72,6 +99,68 @@ class MQ:
     q:  Optional[aio_pika.abc.AbstractQueue] = None
 
 mq = MQ()
+
+@app.post("/extract/{document_id}", status_code=202)
+async def trigger_extraction(document_id: str):
+    """
+    Manually trigger extraction by publishing the same event ingestion will send.
+    Useful for local testing / ops. The consumer (handle_document_discovered)
+    will do the actual extraction work.
+    """
+    if mq.ex is None:  # service not fully started / broker not ready
+        raise HTTPException(status_code=503, detail="Message broker not ready, try again in a moment.")
+    pdf_path = os.path.join(_PDF_DIR, f"{document_id}.pdf")
+    if not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail=f"PDF not found at {_PDF_DIR}/{document_id}.pdf")
+
+    # Build a minimal DocumentDiscovered-like envelope the consumer understands
+    size_bytes = os.path.getsize(pdf_path)
+    envelope = {
+        "event_type": "DocumentDiscovered",                      
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "correlation_id": str(uuid4()),
+        "source_service": settings.service_name,
+        "data": {
+            "id": document_id,
+            "title": "",
+            "download_path": pdf_path,                         
+            "size_bytes": size_bytes,
+        },
+    }
+
+    # Publish to the same exchange/routing key our consumer is bound to
+    await mq.ex.publish(
+        aio_pika.Message(
+            body=json.dumps(envelope).encode("utf-8"),
+            delivery_mode=DeliveryMode.PERSISTENT,
+            content_type="application/json",
+        ),
+        routing_key=ROUTING_IN,
+    )
+    return {"accepted": True, "documentId": document_id}
+
+@app.get("/status/{document_id}")
+def get_status(document_id: str):
+    """
+    Best-effort status by checking for produced artifacts in /data/text.
+    """
+    jsonl_path = os.path.join(_TEXT_DIR, f"{document_id}.jsonl")
+    txt_path   = os.path.join(_TEXT_DIR, f"{document_id}.txt")
+
+    if os.path.exists(txt_path) or os.path.exists(jsonl_path):
+        pages, chars = _jsonl_stats(jsonl_path) if os.path.exists(jsonl_path) else (None, None)
+        return {
+            "status": "done",
+            "documentId": document_id,
+            "artifacts": {
+                "jsonl": jsonl_path if os.path.exists(jsonl_path) else None,
+                "txt":   txt_path   if os.path.exists(txt_path)   else None,
+            },
+            "pageCount": pages,
+            "charCount": chars,
+        }
+
+    return {"status": "pending", "documentId": document_id}
 
 @app.on_event("startup")
 async def on_startup():
@@ -213,8 +302,6 @@ async def handle_document_discovered(msg: aio_pika.IncomingMessage):
 
             # Fresh extraction
             stats = _extract_pdf_to_jsonl(pdf_path, out_path)
-
-            # Publish DocumentExtracted (events.md schema)
             evt = _build_extracted_event(
                 doc_id=doc_id,
                 title=title,
@@ -223,6 +310,10 @@ async def handle_document_discovered(msg: aio_pika.IncomingMessage):
                 token_count=_estimate_tokens_from_chars(stats["chars_out"]),
                 correlation_id=corr,
             )
+
+            #Write one line to text_metadata.jsonl for fresh extraction
+            _append_metadata_from_event(evt)
+
             await mq.ex.publish(
                 aio_pika.Message(
                     body=json.dumps(evt).encode("utf-8"),
