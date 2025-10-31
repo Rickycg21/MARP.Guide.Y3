@@ -6,7 +6,7 @@ Publishes metadata about newly fetched documents to extraction service.
 
 ## Data Owned
 - `/data/pdfs/` — Raw PDF files referenced by *DocumentDiscovered.data.download_path*
-- `/data/pdf_metadata.jsonl` - PDF metadata (document_id, title, url, pages, discovered_at)
+- `/data/pdf_metadata.jsonl` - PDF metadata (document_id, title, url, download_path, pages, discovered_at)
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
