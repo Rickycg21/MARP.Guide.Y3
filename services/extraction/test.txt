@@ -1,38 +1,15 @@
+(Provisional) Nothing fancy but just in case here's a couple commands to manually test extraction. Should have the pdf you want to extract in the pdfs folder. Extracted text should get stored inside the text folder on a jsonl file. text_metadata.jsonl and and counters.json should also get updated
 
 1) Set up the Docker
-docker compose build --no-cache extraction
-docker compose up -d extraction
+docker compose up -d --build rabbitmq extraction
 
-2) (Optional) Delete the previous extraction output
-rm -f ./data/text/ug_assess_regs_2025.jsonl
-ls -lah ./data/text | grep ug_assess_regs_2025 || echo "removed"
+2) Health Checks
+curl -s http://localhost:5002/health
+curl -s http://localhost:5002/metrics
 
-3) (Optional) Reset counters
+4) Manual trigger
+curl -s -X POST http://localhost:5002/extract/name_of_pdf_you_want_to_extract
+
+5) Reset counters
 echo '{"events_consumed":0,"docs_extracted":0,"errors":0}' > ./data/metrics/counters.json
 curl -s http://localhost:5002/metrics
-
-4) Re-publish the “DocumentDiscovered” event
-In RabbitMQ UI (http://localhost:15672) → Exchanges → events → Publish message:
-Routing key: document.discovered
-Payload:
-{
-  "event_type": "DocumentDiscovered",
-  "timestamp": "2025-10-31T12:00:00Z",
-  "source_service": "manual-test",
-  "data": {
-    "id": "ug_assess_regs_2025",
-    "title": "Undergraduate Assessment Regulations",
-    "download_path": "/data/pdfs/ug-assess-regs.pdf",
-    "size_bytes": 391000
-  }
-}
-
-5) Run it
-docker compose logs -f --tail=100 extraction
-
-6) (Optional) Verify results
-# Metrics should show events_consumed: 1, docs_extracted: 1, errors: 0
-curl -s http://localhost:5002/metrics
-# Extracted JSONL should exist and have content
-ls -lah ./data/text/ug_assess_regs_2025.jsonl
-head -n 3 ./data/text/ug_assess_regs_2025.jsonl
