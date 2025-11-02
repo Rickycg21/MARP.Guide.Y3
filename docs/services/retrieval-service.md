@@ -9,14 +9,14 @@ Perform semantic and keyword searches over the indexed content, returning ranked
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
 |---------|-----------|--------------|----------|
-| GET | `/search?q={query}&top_k={n}` | Retrieve top n chunks for a query | 200 OK + JSON |
+| GET | `/search?q={query}&top_k={n}` | Retrieve top-k chunks for a query  | 200 OK + JSON |
 | GET | `/health` | Health check | 200 OK |
 
 ## Events
 - **Consumes:** `ChunksIndexed`
 - **Publishes:** `RetrievalCompleted`
 
-## Talks To
+## Communicates With
 - RabbitMQ (event broker)
-- Persistent volume (`/data`)
-- Vector database (shared under /data/index/)
+- Local `data/` folder
+- Vector database (under `data/index/`)

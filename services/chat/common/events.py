@@ -135,7 +135,7 @@ async def publish_event(event: EventEnvelope) -> None:
     # routing_key == queue.name -> deliver directly to that queue.
     await channel.default_exchange.publish(message, routing_key=queue.name)
 
-    logger.info("Published %s id=%s corr=%s", event.eventType, event.id, event.correlationId)
+    logger.info("Published %s id=%s corr=%s", event.eventType, event.eventId, event.correlationId)
 
 # =============================================================================
 # 4) Consuming
