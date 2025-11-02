@@ -20,18 +20,15 @@ Transform extracted text into vector embeddings and store searchable chunks in t
 - **Publishes:** `ChunksIndexed`
 
 ## Talks To
-- RabbitMQ (event broker)
+- RabbitMQ (event broker)   
 - Persistent volume (`/data`)
 - Embedding model
 
 ## Design Decisions
 
-- The chosen chunk size (≈450 tokens) is a design baseline derived from the embedding model’s technical limit (512 tokens per input) and the expected structure of MARP documents, which are dense, academic-style regulations.  
+- The chosen chunk size (≈450 tokens) is a design baseline derived from the embedding model’s technical limit (512 tokens per input) and the expected structure of MARP documents academic-style regulations.  
 
 - Such texts benefit from paragraph-level context rather than short sentence fragments.  
-
-- This range (≈350–550 tokens) is also consistent with common RAG benchmarks for legal or policy data, balancing semantic completeness with retrieval precision.  
-The value will be empirically refined once real document statistics become available.
 
 ### Chunking Strategy
 
@@ -47,17 +44,3 @@ The Indexing Service divides extracted MARP document text into semantically cohe
 
 #### Implementation Notes
 Chunking is implemented in `pipeline.py`.  
-Each chunk stores metadata such as:
-
-```json
-{
-  "chunkId": "marp-2025-policy-v3-0042",
-  "tokens": 438,
-  "page": 16,
-  "text": "...",
-  "metadata": {
-    "documentId": "marp-2025-policy-v3",
-    "title": "Assessment Regulations 2025",
-    "url": "https://www.lancaster.ac.uk/.../Assessment_Regulations.pdf"
-  }
-}
