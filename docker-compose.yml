@@ -79,6 +79,7 @@ services:
       - DATA_ROOT=/data
       - LOG_LEVEL=INFO
       - CHROMA_DIR=/data/index
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
     ports:
       - "5003:8000"
     volumes:

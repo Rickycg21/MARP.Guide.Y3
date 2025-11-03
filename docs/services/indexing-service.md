@@ -5,8 +5,7 @@ Transform extracted text into vector embeddings and store searchable chunks in t
 
 ## Data Owned
 - `/data/index/` — vector index storage referenced by *ChunksIndexed.payload.indexPath*
-- `/data/index.db` — lightweight mapping (document_id -> embedding_ids)
-- `index_metadata.jsonl` — per-document indexing metadata (document_id, chunk_count, embedding_model, vector_db)
+- `index_metadata.jsonl` — per-document indexing metadata (document_id, index_path, chunk_count, embedding_model, vector_db, vector_dimention, indexed_at)
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
