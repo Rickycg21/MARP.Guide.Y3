@@ -75,7 +75,7 @@ def get_settings() -> Settings:
     # Read from environment using helpers with safe fallbacks
     service_name = _env_str("SERVICE_NAME", "unknown-service")
     service_port = _env_int("SERVICE_PORT", 8000)
-    rabbitmq_url = _env_str("RABBITMQ_URL", "amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/")
+    rabbitmq_url = _env_str("RABBITMQ_URL", "amqp://admin:admin@rabbitmq:5672/")
     data_root    = _env_str("DATA_ROOT", "/data")
     log_level    = _env_str("LOG_LEVEL", "INFO")
 

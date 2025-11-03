@@ -17,7 +17,7 @@ class DocumentRecord(BaseModel):
     title: str # Human-readable label extracted from the <a> tag (hyperlink) text 
     url: AnyHttpUrl # Canonical absolute URL to the PDF (validated as HTTP/HTTPS)
     download_path: str # Local path to the saved PDF under DATA_ROOT/pdfs/
-    pages: Optional[int] = None # Page count
+    pages: Optional[int] = None # Number of pages in the PDF
     discovered_at: str # Timestamp (UTC ISO-8601) when this record was produced
 
 class DocumentsList(BaseModel):

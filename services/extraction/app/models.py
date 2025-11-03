@@ -1,72 +1,49 @@
-"""
-Pydantic data models for the extraction service.
+# Pydantic data models (schemas) for the extraction service.
 
-- Request/Response models used by the HTTP API.
-- Broker envelope models used to validate inbound events from RabbitMQ.
-"""
+from typing import Optional, List, Dict
+from pydantic import BaseModel
 
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field
+# -----------------------------------------------------------------------------
+# REST response models
+# -----------------------------------------------------------------------------
 
+class ExtractResponse(BaseModel):
+    """
+    Response shape for POST /extract/{document_id}.
+    We return 202 Accepted + { "accepted": true } because the job
+    runs asynchronously in the background.
+    """
+    accepted: bool = True
 
-# -------- API response models --------
-class ExtractAccepted(BaseModel):
-    accepted: bool
-    documentId: str
+class ExtractStatus(BaseModel):
+    """
+    Response shape for GET /status/{document_id}.
+    One status snapshot for a document.
+    message: Human-friendly context ("manual trigger accepted", error text, etc.)
+    """
+    document_id: str
+    status: str  # "pending" | "done" | "error"
+    message: Optional[str] = None # context ("manual trigger accepted", error text, etc.)
 
+class StatusList(BaseModel):
+    """
+    Response shape for GET /status.
+    """
+    status_history: List[ExtractStatus]
 
-class StatusResponse(BaseModel):
-    status: str
-    documentId: str
-    pageCount: Optional[int] = None
-    charCount: Optional[int] = None
-    artifacts: Dict[str, Optional[str]]
+# -----------------------------------------------------------------------------
+# Internal record written to append-only JSONL for metadata
+# -----------------------------------------------------------------------------
 
-
-# -------- Inbound event  --------
-class DocumentDiscoveredData(BaseModel):
-    id: str
-    title: Optional[str] = ""
-    download_path: Optional[str] = None
-    stored_path: Optional[str] = None
-    path: Optional[str] = None
-    size_bytes: Optional[int] = None
-
-
-class DocumentDiscoveredEnvelope(BaseModel):
-    event_type: str = Field(..., description="e.g. 'DocumentDiscovered'")
-    timestamp: str
-    correlation_id: Optional[str] = None
-    source_service: Optional[str] = None
-    data: DocumentDiscoveredData
-
-
-# -------- Outbound event --------
-class ExtractedMetadata(BaseModel):
-    title: str
-    extractedBy: str
-    extractedAt: str
-
-
-class DocumentExtractedPayload(BaseModel):
-    documentId: str
-    textPath: str
-    pageCount: Optional[int]
-    tokenCount: Optional[int]
-    metadata: ExtractedMetadata
-
-
-class DocumentExtractedEvent(BaseModel):
-    eventType: str = "DocumentExtracted"
-    eventId: str
-    timestamp: str
-    correlationId: Optional[str] = None
-    source: str
-    version: str = "1.0"
-    payload: DocumentExtractedPayload
-
-
-
-
-
-
+class TextRecord(BaseModel):
+    """
+    One line in data/text_metadata.jsonl after a successful extraction.
+    Fields mirror what downstream services need (and what's emitted in the
+    DocumentExtracted event payload).
+    """
+    document_id: str   # Stable doc ID (same as ingestion)
+    text_path: str     # Local path to the extracted text under DATA_ROOT/text/
+    page_count: int    # Number of pages in the PDF
+    token_count: int   # Number of tokens in extracted text (tiktoken for GPT-4/4o)
+    extracted_by: str  # Extraction tool
+    extracted_at: str  # Timestamp (UTC ISO-8601) when this record was produced
