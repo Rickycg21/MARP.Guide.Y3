@@ -11,7 +11,8 @@ from sentence_transformers import SentenceTransformer
 import re
 import chromadb
 from common.events import publish_event, new_event
-import datetime, uuid
+import datetime
+import json
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -34,6 +35,8 @@ async def handle_document(env: EventEnvelope, msg: AbstractIncomingMessage):
         chunks = generate_embeddings(chunks)
 
         store_embeddings(doc_id, chunks)
+
+        log_index_metadata(doc_id, len(chunks))
 
         await publish_chunks_indexed(doc_id, len(chunks), correlation_id)
 
@@ -117,7 +120,7 @@ def generate_embeddings(chunks):
     return chunks
 
 # ChromaDB setup 
-client = chromadb.Client()
+client = chromadb.PersistentClient(path="/data/index")
 collection = client.get_or_create_collection("marp_docs")
 
 def store_embeddings(document_id: str, chunks):
@@ -131,6 +134,22 @@ def store_embeddings(document_id: str, chunks):
         metadatas=[{"document_id": document_id}] * len(chunks)
     )
     print(f"[Indexing] Stored {len(chunks)} chunks in ChromaDB")
+
+def log_index_metadata(document_id, chunk_count):
+    """
+    Appends per-document metadata into /data/index_metadata.jsonl
+    according to the MARP Indexing specification.
+    """
+    metadata_path = Path("/data/index_metadata.jsonl")
+    record = {
+        "document_id": document_id,
+        "chunk_count": chunk_count,
+        "embedding_model": "all-MiniLM-L6-v2",
+        "vector_db": "ChromaDB",
+        "timestamp": datetime.datetime.isoformat() + "Z"
+    }
+    with open(metadata_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
 
 async def publish_chunks_indexed(doc_id: str, chunk_count: int, correlation_id: str):
     """
@@ -187,6 +206,9 @@ async def manual_index_document(document_id: str, text_path: str, correlation_id
 
         # Store in ChromaDB
         store_embeddings(document_id, chunks)
+
+        # Log metadata
+        log_index_metadata(document_id, len(chunks))
 
         # Publish updated event
         await publish_chunks_indexed(document_id, len(chunks), correlation_id)
