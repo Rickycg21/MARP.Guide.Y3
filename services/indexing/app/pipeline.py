@@ -116,6 +116,7 @@ def generate_embeddings(chunks):
     print(f"[Indexing] Generated {len(chunks)} embeddings")
     return chunks
 
+# ChromaDB setup 
 client = chromadb.Client()
 collection = client.get_or_create_collection("marp_docs")
 
