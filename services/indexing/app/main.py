@@ -2,7 +2,7 @@ from common.config import settings
 import asyncio
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from common.events import consume
-from app.pipeline import handle_document
+from app.pipeline import handle_document, manual_index_document
 from uuid import uuid4
 from pathlib import Path
 

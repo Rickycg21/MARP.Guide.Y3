@@ -10,7 +10,7 @@ import aiofiles
 from sentence_transformers import SentenceTransformer
 import re
 import chromadb
-from common.events import publish_event
+from common.events import publish_event, new_event
 import datetime, uuid
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -135,22 +135,22 @@ async def publish_chunks_indexed(doc_id: str, chunk_count: int, correlation_id: 
     """
     Publishes a ChunksIndexed event following the standard MARP schema.
     """
-    event = {
-        "eventType": "ChunksIndexed",
-        "eventId": str(uuid.uuid4()),
-        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-        "correlationId": correlation_id,
-        "source": "indexing-service",
-        "version": "1.0",
-        "payload": {
-            "documentId": doc_id,
-            "chunkCount": chunk_count,
-            "embeddingModel": "all-MiniLM-L6-v2",
-            "vectorDb": "ChromaDB",
-            "vectorDimension": 384,
-            "indexPath": "/data/index/index.db"
-        }
+    payload = {
+        "documentId": doc_id,
+        "chunkCount": chunk_count,
+        "embeddingModel": "all-MiniLM-L6-v2",
+        "vectorDb": "ChromaDB",
+        "vectorDimension": 384,
+        "indexPath": "/data/index/index.db"
     }
+
+    # Create event envelope
+    event = new_event(
+        event_type="ChunksIndexed",
+        payload=payload,
+        correlation_id=correlation_id,
+        source="indexing-service"
+    )
 
     try:
         await publish_event(event)
@@ -163,17 +163,35 @@ async def publish_chunks_indexed(doc_id: str, chunk_count: int, correlation_id: 
 
 async def manual_index_document(document_id: str, text_path: str, correlation_id: str):
     """
-    Manual trigger of indexing process for local testing.
-    Mirrors handle_document but without RabbitMQ.
+    Manual re-indexing of an existing document.
+    Removes old embeddings before re-indexing.
+    Used by POST /index/{document_id} endpoint.
     """
     try:
-        print(f"[Manual Index] Starting indexing for {document_id}")
+        print(f"[Manual Index] Re-indexing {document_id}...")
+
+        # Delete old embeddings
+        try:
+            deleted = collection.delete(where={"document_id": document_id})
+            print(f"[Manual Index] Old embeddings deleted for {document_id}")
+        except Exception as e:
+            print(f"[Manual Index] No previous embeddings to remove ({e})")
+
+        # Read original text
         text = await read_text_file(text_path)
+
+        # Generate new embeddings
         chunks = chunk_text_semantic(text, document_id)
         chunks = generate_embeddings(chunks)
+
+        # Store in ChromaDB
         store_embeddings(document_id, chunks)
+
+        # Publish updated event
         await publish_chunks_indexed(document_id, len(chunks), correlation_id)
-        print(f"[Manual Index] Completed for {document_id}")
+
+        print(f"[Manual Index] Re-index completed for {document_id}")
+
     except Exception as e:
-        print(f"[Manual Index] Error: {e}")
+        print(f"[Manual Index] Error re-indexing {document_id}: {e}")
         raise
