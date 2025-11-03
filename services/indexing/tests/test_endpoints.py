@@ -9,9 +9,12 @@ Two DeprecationWarnings appear during tests because FastAPI's 'on_event' is depr
 They do not affect functionality and can be safely ignored.
 """
 
+#Initialize FastAPI test client
 client = TestClient(app)
 
 @pytest.fixture(scope="module", autouse=True)
+
+# Creates a fixture to setup and teardown a test text file
 def setup_test_text_file(tmp_path_factory):
     """
     Create a test text file for the endpoint /index/{document_id}.
