@@ -1,11 +1,11 @@
 """
-Responsibile for "extraction":
+Responsible for "extraction":
 - Locate the input PDF (written by Ingestion) under {DATA_ROOT}/pdfs/{doc_id}.pdf
 - Extract page text with pdfplumber
 - Write a single UTF-8 .txt file with page markers under {DATA_ROOT}/text/{doc_id}.txt
 - Count tokens using tiktoken ("cl100k_base") to match GPT-4/4o family models
 
-We Keep this module I/O-only and stateless; orchestration & events live in main.py.
+We keep this module I/O-only and stateless; orchestration & events live in main.py.
 """
 
 import os
@@ -13,13 +13,13 @@ import logging
 from typing import Tuple
 
 import pdfplumber # Extract text from PDF pages
-import tiktoken   # Model-aligned tokenizer for token counts
+import tiktoken   # Model-aligned tokeniser for token counts
 
 from common.config import settings
 
 logger = logging.getLogger("extraction")
 
-# Build tokenizer once per process. cl100k_base covers GPT-4/4o families.
+# Build tokeniser once per process. cl100k_base covers GPT-4/4o families.
 _ENCODER = tiktoken.get_encoding("cl100k_base")
 logger.info("tiktoken 'cl100k_base' loaded for token counting")
 

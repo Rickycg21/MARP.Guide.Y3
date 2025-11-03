@@ -42,7 +42,7 @@ class TextRecord(BaseModel):
     DocumentExtracted event payload).
     """
     document_id: str   # Stable doc ID (same as ingestion)
-    text_path: str     # Local path to the extracted text under DATA_ROOT/pdfs/
+    text_path: str     # Local path to the extracted text under DATA_ROOT/text/
     page_count: int    # Number of pages in the PDF
     token_count: int   # Number of tokens in extracted text (tiktoken for GPT-4/4o)
     extracted_by: str  # Extraction tool

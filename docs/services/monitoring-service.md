@@ -18,7 +18,6 @@ Aggregate and display system health, service metrics, and event throughput for t
 - **Consumes:** `RetrievalCompleted` & `AnswerGenerated`
 - **Publishes:** *(none)*
 
-## Talks To
 ## Communicates With
 - RabbitMQ (event broker)
 - Local `data/` folder
