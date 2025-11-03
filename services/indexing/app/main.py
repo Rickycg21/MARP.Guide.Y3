@@ -5,6 +5,7 @@ from common.events import consume
 from app.pipeline import handle_document, manual_index_document
 from uuid import uuid4
 from pathlib import Path
+from app.pipeline import collection
 
 app = FastAPI(title="Indexing Service")
 
@@ -32,3 +33,27 @@ async def index_document(document_id: str, background_tasks: BackgroundTasks):
     "correlationId": correlation_id
 }
 
+@app.get("/index/stats")
+async def index_stats():
+    """
+    Retrieve index statistics (number of documents and chunks stored).
+    """
+    try:
+        # Get all entries in the collection
+        items = collection.get(include=[])  # only metadata
+        metadatas = items.get("metadatas", [])
+
+        # Count total chunks and distinct documents
+        total_chunks = len(metadatas)
+        unique_docs = len(set(m["document_id"] for m in metadatas if "document_id" in m))
+
+        return {
+            "status": "ok",
+            "documentsIndexed": unique_docs,
+            "chunksStored": total_chunks,
+            "vectorDb": "ChromaDB",
+            "embeddingModel": "all-MiniLM-L6-v2"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve index stats: {e}")
