@@ -1,10 +1,16 @@
 from common.events import EventEnvelope
-from aio_pika import AbstractIncomingMessage
+try:
+    from aio_pika.abc import AbstractIncomingMessage
+except ImportError:
+    # Fallback only for local testing without RabbitMQ
+    class AbstractIncomingMessage:
+        pass
 from pathlib import Path
 import aiofiles
-from sentence_transformers import SentenceTransformer, SentenceSplitter
+from sentence_transformers import SentenceTransformer
+import re
 import chromadb
-from common.events import new_event, publish_event
+from common.events import publish_event
 import datetime, uuid
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -68,14 +74,33 @@ async def read_text_file(text_path: str) -> str:
     return text
 
 def chunk_text_semantic(text: str, doc_id: str):
-    splitter = SentenceSplitter(chunk_size=450)
-    sentences = splitter.split(text)
+    """
+    Simple text splitter that breaks the text into chunks of ~450 characters
+    using sentence boundaries when possible.
+    """
+    # Dividir por puntos, signos de interrogación o exclamación.
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
 
     chunks = []
-    for i, chunk in enumerate(sentences, start=1):
+    current_chunk = ""
+    chunk_size = 450
+    counter = 1
+
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) < chunk_size:
+            current_chunk += " " + sentence
+        else:
+            chunks.append({
+                "chunkId": f"{doc_id}-{counter:04}",
+                "text": current_chunk.strip()
+            })
+            counter += 1
+            current_chunk = sentence
+
+    if current_chunk.strip():
         chunks.append({
-            "chunkId": f"{doc_id}-{i:04}",
-            "text": chunk
+            "chunkId": f"{doc_id}-{counter:04}",
+            "text": current_chunk.strip()
         })
 
     print(f"[Indexing] Created {len(chunks)} semantic chunks")
@@ -130,5 +155,25 @@ async def publish_chunks_indexed(doc_id: str, chunk_count: int, correlation_id: 
     try:
         await publish_event(event)
         print(f"[Indexing] Published ChunksIndexed for {doc_id}")
+    except AttributeError as e:
+        # Local testing without RabbitMQ
+        print(f"[Indexing] Skipping RabbitMQ publish in local mode ({e})")
     except Exception as e:
         print(f"[Indexing] Failed to publish ChunksIndexed: {e}")
+
+async def manual_index_document(document_id: str, text_path: str, correlation_id: str):
+    """
+    Manual trigger of indexing process for local testing.
+    Mirrors handle_document but without RabbitMQ.
+    """
+    try:
+        print(f"[Manual Index] Starting indexing for {document_id}")
+        text = await read_text_file(text_path)
+        chunks = chunk_text_semantic(text, document_id)
+        chunks = generate_embeddings(chunks)
+        store_embeddings(document_id, chunks)
+        await publish_chunks_indexed(document_id, len(chunks), correlation_id)
+        print(f"[Manual Index] Completed for {document_id}")
+    except Exception as e:
+        print(f"[Manual Index] Error: {e}")
+        raise
