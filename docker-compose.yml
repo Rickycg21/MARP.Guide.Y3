@@ -24,16 +24,16 @@ services:
     build: ./services/ingestion
     container_name: ingestion-service
     environment:
-      - SERVICE_NAME=ingestion-service
+      - SERVICE_NAME=ingestion
       - SERVICE_PORT=5001
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
       - DATA_ROOT=/data
       - LOG_LEVEL=INFO
-      - DATA_SOURCE=https://www.lancaster.ac.uk/academic-standards-and-quality/regulations-and-policies/manual-of-academic-regulations-and-procedures/
+      - MARP_SOURCE_URL=https://www.lancaster.ac.uk/academic-standards-and-quality/regulations-and-policies/manual-of-academic-regulations-and-procedures/
     ports:
       - "5001:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -57,7 +57,7 @@ services:
     ports:
       - "5002:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -79,10 +79,11 @@ services:
       - DATA_ROOT=/data
       - LOG_LEVEL=INFO
       - CHROMA_DIR=/data/index
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
     ports:
       - "5003:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -107,7 +108,7 @@ services:
     ports:
       - "5004:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -135,7 +136,7 @@ services:
     ports:
       - "5005:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -161,7 +162,7 @@ services:
     ports:
       - "5006:8000"
     volumes:
-      - data:/data
+      - ./data:/data
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -174,14 +175,8 @@ services:
     restart: unless-stopped
 
 volumes:
-  data:
   rabbitmq_data:
 
 networks:
   marp_net:
     driver: bridge
-    
-  
-    
-    
-

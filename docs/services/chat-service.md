@@ -1,7 +1,7 @@
 # Chat Service
 
 ## Responsibility
-Provide conversational interface that answers user questions using retrieved chunks and LLM completions.
+Provide conversational answers using retrieved chunks and LLM completions; orchestrates retrieval + prompting.
 
 ## Data Owned
 - `/data/answer_metadata.jsonl` — answer metadata (session_id, query_id, answer, citations[], tokens_used, model, latency_ms)
@@ -13,11 +13,11 @@ Provide conversational interface that answers user questions using retrieved chu
 | GET | `/health` | Health check | 200 OK |
 
 ## Events
-- **Consumes:** `RetrievalCompleted`
+- **Consumes:**   *(none)*
 - **Publishes:** `AnswerGenerated`
 
-## Talks To
+## Communicates With
 - RabbitMQ (event broker)
-- Persistent volume (`/data`)
-- Retrieval Service (GET /search)
+- Local `data/` folder
+- Retrieval Service (REST `/search`)
 - OpenRouter LLM API (via service layer)

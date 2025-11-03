@@ -21,12 +21,11 @@ This document explains the main technical choices made for the MARP-Guide RAG Ch
 
 ---
 
-## 3. Data & Vector Storage
+## 3. Vector Storage
 
 | Component | Decision | Rationale |
 |------------|-----------|-----------|
 | **ChromaDB** | Local vector database for embeddings and metadata | Simple to integrate with Python as it can run in-process. Supports add/query operations used by Indexing and Retrieval. |
-| **Persistent Volumes** | Mounted Docker volumes under `/data/` | Keeps PDFs, extracted text, and chunk files consistent across container restarts. |
 
 ---
 

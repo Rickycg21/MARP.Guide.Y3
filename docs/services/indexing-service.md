@@ -4,9 +4,8 @@
 Transform extracted text into vector embeddings and store searchable chunks in the vector index.
 
 ## Data Owned
-- `/data/index/` — vector index storage referenced by *ChunksIndexed.data.index_path*
-- `/data/index.db` — lightweight mapping (document_id -> embedding_ids) for maintenance and rebuilds
-- `index_metadata.jsonl` — per-document indexing metadata (document_id, chunk_count, embedding_model, vector_db)
+- `/data/index/` — vector index storage referenced by *ChunksIndexed.payload.indexPath*
+- `index_metadata.jsonl` — per-document indexing metadata (document_id, index_path, chunk_count, embedding_model, vector_db, vector_dimention, indexed_at)
 
 ## API Endpoints
 | Method | Endpoint | Description | Returns |
@@ -22,6 +21,9 @@ Transform extracted text into vector embeddings and store searchable chunks in t
 ## Talks To
 - RabbitMQ (event broker)   
 - Persistent volume (`/data`)
+## Communicates With
+- RabbitMQ (event broker)
+- Local `data/` folder
 - Embedding model
 
 ## Design Decisions

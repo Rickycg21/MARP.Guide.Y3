@@ -1,0 +1,15 @@
+(Provisional) Nothing fancy but just in case here's a couple commands to manually test extraction. Should have the pdf you want to extract in the pdfs folder. Extracted text should get stored inside the text folder on a jsonl file. text_metadata.jsonl and and counters.json should also get updated
+
+1) Set up the Docker
+docker compose up -d --build rabbitmq extraction
+
+2) Health Checks
+curl -s http://localhost:5002/health
+curl -s http://localhost:5002/metrics
+
+4) Manual trigger
+curl -s -X POST http://localhost:5002/extract/name_of_pdf_you_want_to_extract
+
+5) Reset counters
+echo '{"events_consumed":0,"docs_extracted":0,"errors":0}' > ./data/metrics/counters.json
+curl -s http://localhost:5002/metrics
