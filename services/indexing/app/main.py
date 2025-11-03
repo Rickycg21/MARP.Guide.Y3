@@ -21,7 +21,7 @@ async def health():
 @app.post("/index/{document_id}", status_code=202)
 async def index_document(document_id: str, background_tasks: BackgroundTasks):
 
-    text_path = Path(settings.data_root) / "text" / f"{document_id}.txt"  
+    text_path = Path(settings.data_Root) / "text" / f"{document_id}.txt"  
     if not text_path.exists():
         raise HTTPException(status_code=404, detail=f"Text file for document '{document_id}' not found at: {text_path}")
     
@@ -39,13 +39,17 @@ async def index_stats():
     Retrieve index statistics (number of documents and chunks stored).
     """
     try:
-        # Get all entries in the collection
-        items = collection.get(include=[])  # only metadata
-        metadatas = items.get("metadatas", [])
+        # Get all entries in the collection safely
+        items = collection.get()  
+        metadatas = items.get("metadatas", []) or []
 
         # Count total chunks and distinct documents
         total_chunks = len(metadatas)
-        unique_docs = len(set(m["document_id"] for m in metadatas if "document_id" in m))
+        unique_docs = len(set(
+            m.get("document_id")
+            for m in metadatas
+            if m and "document_id" in m
+        ))
 
         return {
             "status": "ok",
@@ -56,4 +60,5 @@ async def index_stats():
         }
 
     except Exception as e:
+        print(f"[Stats] Error getting stats: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve index stats: {e}")
