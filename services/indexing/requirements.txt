@@ -7,3 +7,4 @@ chromadb>=0.4.24,<0.6
 sentence-transformers>=2.2,<3
 numpy>=1.26,<2.2
 aiofiles>=23.0,<24.0
+tiktoken>=0.7,<0.8
