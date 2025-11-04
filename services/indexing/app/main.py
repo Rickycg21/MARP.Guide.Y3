@@ -6,6 +6,8 @@ from app.pipeline import handle_document, manual_index_document
 from uuid import uuid4
 from pathlib import Path
 from app.pipeline import collection
+from app.models import IndexResponse, IndexStats
+
 
 app = FastAPI(title="Indexing Service")
 
@@ -28,10 +30,10 @@ async def index_document(document_id: str, background_tasks: BackgroundTasks):
     correlation_id = f"manual-{uuid4()}"
     background_tasks.add_task(manual_index_document, document_id, str(text_path), correlation_id)
 
-    return {
-    "message": f"Indexing accepted for {document_id}",
-    "correlationId": correlation_id
-}
+    return IndexResponse(
+        message=f"Indexing accepted for {document_id}",
+        correlationId=correlation_id
+    )
 
 @app.get("/index/stats")
 async def index_stats():
@@ -51,13 +53,13 @@ async def index_stats():
             if m and "document_id" in m
         ))
 
-        return {
-            "status": "ok",
-            "documentsIndexed": unique_docs,
-            "chunksStored": total_chunks,
-            "vectorDb": "ChromaDB",
-            "embeddingModel": "all-MiniLM-L6-v2"
-        }
+        return IndexStats(
+            status="ok",
+            documentsIndexed=unique_docs,
+            chunksStored=total_chunks,
+            vectorDb="ChromaDB",
+            embeddingModel="all-MiniLM-L6-v2"
+        )
 
     except Exception as e:
         print(f"[Stats] Error getting stats: {e}")
