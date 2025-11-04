@@ -4,7 +4,7 @@
 Aggregate and display system health, service metrics, and event throughput for the entire RAG pipeline.
 
 ## Data Owned
-- `/data/metrics/events.log` — append-only event log capturing all consumed events for traceability
+- `/data/metrics/events.log` — append-only event log
 - `/data/metrics/counters.json` — aggregated service metrics (health_status{}, event_counts{}, avg_latency_ms{})
 
 ## API Endpoints
@@ -18,7 +18,6 @@ Aggregate and display system health, service metrics, and event throughput for t
 - **Consumes:** `RetrievalCompleted` & `AnswerGenerated`
 - **Publishes:** *(none)*
 
-## Talks To
+## Communicates With
 - RabbitMQ (event broker)
-- All other services (via /health and /metrics polling)
-- Persistent volume (`/data`)
+- Local `data/` folder

@@ -1,7 +1,9 @@
 """
-Responsible for "discovery": fetch the MARP landing page, parse PDF links,
-download each PDF (if not already present), compute metadata, and yield
-a per-document dict that the API will publish as a DocumentDiscovered event.
+Responsible for "discovery": 
+- Fetch the MARP landing page
+- Parse PDF links
+- Download each PDF (if not already present)
+- Compute metadata, and yield a per-document dict that the API will publish as a DocumentDiscovered event.
 
 We keep network/IO logic here (separate from FastAPI routes) for:
 - testability: we can unit-test parsing and ID logic without HTTP server

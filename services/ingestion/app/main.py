@@ -29,14 +29,19 @@ logger = logging.getLogger("ingestion")
 # Append-only catalog for discovered PDFs.
 CATALOG_PATH = os.path.join(settings.data_root, "pdf_metadata.jsonl")
 
+# -----------------------------------------------------------------------------
+# Health
+# -----------------------------------------------------------------------------
 @app.get("/health")
 def health():
     """
-    Lightweight readiness endpoint.
-    Cheap (no external calls) so Docker health checks are reliable.
+    Lightweight readiness endpoint. Cheap and reliable for Docker health checks.
     """
     return {"status": "ok", "service": settings.service_name}
 
+# -----------------------------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------------------------
 def _append_catalog(record: DocumentRecord) -> None:
     """
     Append one DocumentRecord JSON line to the catalog file.
@@ -58,6 +63,10 @@ def _load_catalog() -> List[DocumentRecord]:
             # of data types against the Pydantic model
             docs.append(DocumentRecord.model_validate_json(line))
     return docs
+
+# -----------------------------------------------------------------------------
+# API endpoints
+# -----------------------------------------------------------------------------
 
 @app.get("/documents", response_model=DocumentsList)
 def documents():
