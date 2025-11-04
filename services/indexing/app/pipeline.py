@@ -241,7 +241,7 @@ def log_index_metadata(document_id: str, chunk_count: int):
 
     record = {
         "document_id": document_id,
-        "index_path": "/data/index/",          
+        "index_path": INDEX_DIR,
         "chunk_count": chunk_count,
         "embedding_model": "all-MiniLM-L6-v2",
         "vector_db": "ChromaDB",
