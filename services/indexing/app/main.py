@@ -21,7 +21,7 @@ async def health():
 @app.post("/index/{document_id}", status_code=202)
 async def index_document(document_id: str, background_tasks: BackgroundTasks):
 
-    text_path = Path(settings.data_Root) / "text" / f"{document_id}.txt"  
+    text_path = Path(settings.data_root) / "text" / f"{document_id}.txt"  
     if not text_path.exists():
         raise HTTPException(status_code=404, detail=f"Text file for document '{document_id}' not found at: {text_path}")
     

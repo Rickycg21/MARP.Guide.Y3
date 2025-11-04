@@ -19,10 +19,11 @@ def setup_test_text_file(tmp_path_factory):
     """
     Create a test text file for the endpoint /index/{document_id}.
     """
-    data_root = Path(settings.data_Root) / "text"  
+    data_root = Path(settings.data_root) / "text"
     data_root.mkdir(parents=True, exist_ok=True)
     test_file = data_root / "test_doc_endpoint.txt"
     test_file.write_text("This is a document used for endpoint testing.", encoding="utf-8")
+    print(f"[TEST] Creating test file at: {test_file}")
 
     yield str(test_file)
 
