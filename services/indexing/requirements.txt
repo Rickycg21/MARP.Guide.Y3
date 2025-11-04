@@ -1,6 +1,10 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch>=2.7,<2.8
 fastapi>=0.110,<0.120
 uvicorn[standard]>=0.23,<0.31
 aio-pika>=9,<10
 chromadb>=0.4.24,<0.6
 sentence-transformers>=2.2,<3
 numpy>=1.26,<2.2
+aiofiles>=23.0,<24.0
+tiktoken>=0.7,<0.8
