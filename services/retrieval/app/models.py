@@ -18,7 +18,6 @@ class Scores(BaseModel):
 class SearchResult(BaseModel):
     """Single hit returned from the vector DB."""
     document_id: str = Field(..., alias="documentId")
-    chunk_id:    str = Field(..., alias="chunkId")
     page: Optional[int] = None
     title: Optional[str] = None
     url:   Optional[str] = None
@@ -42,6 +41,6 @@ class HealthResponse(BaseModel):
     """Health summary used by /health."""
     status: Literal["ok", "degraded", "down"]
     chroma_dir: Optional[str] = Field(None, alias="chromaDir")
-    embedding: Dict[str, Any]  # <-- replace HealthEmbedding with a dict
+    embedding: Dict[str, Any]
 
     model_config = {"populate_by_name": True}

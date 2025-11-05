@@ -4,7 +4,7 @@
 #   - /search: standard retrieval endpoint
 #   - /health: service health
 #   - /dev/consumeChunksIndexed: DEV-only endpoint that simulates "indexer
-#     emitted ChunksIndexed" -> run retrieval -> publish RetrievalCompleted.
+#     emitted ChunksIndexed" → run retrieval → optionally publish RetrievalCompleted.
 # =============================================================================
 
 import os, uuid, json, time, logging, datetime as dt
@@ -88,7 +88,7 @@ async def publish_retrieval_completed(
         }
 
         maybe = _publish(envelope, exchange=EVENT_EXCHANGE)
-        if hasattr(maybe, "__await__"): 
+        if hasattr(maybe, "__await__"):  # support async or sync publisher
             await maybe
 
     except Exception as e:
@@ -133,7 +133,9 @@ async def search(
     """Run retrieval and return normalized results. Optionally publish an event."""
     assert retriever
     try:
-        rows, stats = await retriever.search(q=q, top_k=topK, mode=mode, document_id=documentId)
+        t0 = time.monotonic_ns()
+        rows, _stats = await retriever.search(q=q, top_k=topK, mode=mode, document_id=documentId)
+        elapsed_ms = int((time.monotonic_ns() - t0) / 1e6)
     except ValueError as ve:
         raise HTTPException(400, str(ve))
     except Exception as e:
@@ -143,7 +145,6 @@ async def search(
     # Shape rows -> response models
     results = [SearchResult(
         document_id=r.get("document_id","unknown"),
-        chunk_id=r.get("chunk_id",""),
         page=r.get("page"),
         title=r.get("title"),
         url=r.get("url"),
@@ -154,15 +155,23 @@ async def search(
     query_id = str(uuid.uuid4())
     resp = SearchResponse(
         query_id=query_id, query=q, top_k=topK, mode=mode,
-        duration_ms=int((stats or {}).get("duration_ms", 0)),
+        duration_ms=elapsed_ms,
         results=results,
     )
 
     await publish_retrieval_completed(
         correlation_id=correlationId, query_id=query_id, query_text=q,
-        mode=mode, top_k=topK, duration_ms=int((stats or {}).get("duration_ms", 0)), results=rows
+        mode=mode, top_k=topK, duration_ms=elapsed_ms, results=rows
     )
-    _log_query_jsonl(query_id, q, mode, topK, results, correlationId, source="http")
+
+    _log_query_jsonl(
+        query_id=query_id,
+        query_text=q,
+        mode=mode,
+        top_k=topK,
+        retrieval_time_ms=elapsed_ms,
+        results=results,
+    )
 
     return JSONResponse(resp.model_dump(by_alias=True))
 
@@ -177,16 +186,17 @@ async def dev_consume_chunks_indexed(event: Dict[str, Any] = Body(...)) -> JSONR
     if not q:
         raise HTTPException(400, "payload.query is required")
 
-    rows, stats = await retriever.search(
+    t0 = time.monotonic_ns()
+    rows, _stats = await retriever.search(
         q=q,
         top_k=int(payload.get("topK", 5)),
         mode=payload.get("mode", "semantic"),
         document_id=payload.get("documentId"),
     )
+    elapsed_ms = int((time.monotonic_ns() - t0) / 1e6)
 
     results = [SearchResult(
         document_id=r.get("document_id","unknown"),
-        chunk_id=r.get("chunk_id",""),
         page=r.get("page"),
         title=r.get("title"),
         url=r.get("url"),
@@ -198,8 +208,8 @@ async def dev_consume_chunks_indexed(event: Dict[str, Any] = Body(...)) -> JSONR
     resp = SearchResponse(
         query_id=query_id, query=q,
         top_k=int(payload.get("topK",5)),
-        mode=payload.get("mode","semantic"), 
-        duration_ms=int((stats or {}).get("duration_ms", 0)),
+        mode=payload.get("mode","semantic"),
+        duration_ms=elapsed_ms,
         results=results,
     )
 
@@ -208,35 +218,52 @@ async def dev_consume_chunks_indexed(event: Dict[str, Any] = Body(...)) -> JSONR
         query_id=query_id, query_text=q,
         mode=payload.get("mode","semantic"),
         top_k=int(payload.get("topK",5)),
-        duration_ms=int((stats or {}).get("duration_ms", 0)),
+        duration_ms=elapsed_ms,
         results=rows,
     )
-    _log_query_jsonl(query_id, q, payload.get("mode","semantic"),
-                     int(payload.get("topK",5)), results, (event or {}).get("correlationId"),
-                     source="ChunksIndexed")
+
+    _log_query_jsonl(
+        query_id=query_id,
+        query_text=q,
+        mode=payload.get("mode","semantic"),
+        top_k=int(payload.get("topK",5)),
+        retrieval_time_ms=elapsed_ms,
+        results=results,
+    )
     return JSONResponse(resp.model_dump(by_alias=True))
 
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
 def _log_query_jsonl(
-    query_id: str, q: str, mode: str, top_k: int,
-    results: List[SearchResult], correlation_id: Optional[str],
-    source: str = "http"
+    query_id: str,
+    query_text: str,
+    mode: str,
+    top_k: int,
+    retrieval_time_ms: int,
+    results: List[SearchResult],
 ) -> None:
     """Append a compact JSONL line for quick debugging/telemetry."""
     try:
+        out_results = []
+        for r in results:
+            out_results.append({
+                "document_id": r.document_id,
+                "page": r.page,
+                "title": r.title,
+                "url": r.url,
+                "score": (r.scores.combined
+                          if r.scores and r.scores.combined is not None
+                          else r.scores.semantic if r.scores else None),
+            })
+
         line = {
-            "ts": int(time.time() * 1000),
-            "queryId": query_id,
-            "query": q,
+            "query_id": query_id,
+            "query_text": query_text,
             "mode": mode,
-            "topK": top_k,
-            "durationMs": None,
-            "hitCount": len(results),
-            "hits": [r.chunk_id for r in results],
-            "correlationId": correlation_id,
-            "source": source,
+            "top_k": top_k,
+            "retrieval_time_ms": int(retrieval_time_ms or 0),
+            "results": out_results,
         }
         with open("/data/query_metadata.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(line, ensure_ascii=False) + "\n")
