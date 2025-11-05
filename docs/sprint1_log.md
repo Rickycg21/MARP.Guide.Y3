@@ -50,7 +50,8 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 |  | TEST-RAG | Unit tests for RAG response builder | - | 🔜 | Covered prompt assembly and LLM call simulation |
 | **Infrastructure** | INF-1 | Docker Compose setup | Diego, Youssef | ✅ | Verified multi-service startup |
 |  | INF-2 | RabbitMQ integration | - | ✅ | Fully connected via AMQP |
-|  | INF-5 | Documentation under `/docs` | All | ✅ | Architecture, API, and Scrum artefacts ready |
+|  | INF-5a | Service documentation under `/docs/services` | All | ✅ | Includes architecture, services descriptions |
+|  | INF-5b | Project documentation under `/docs` | Youssef, Diego | ✅ | Contains Scrum artefacts, markdown deliverables |
 |  | TEST-INF | Basic service health & container tests | Diego | ✅ | Smoke tests confirm all services reachable |
 
 
@@ -91,6 +92,7 @@ Core RAG pipeline delivered and integrated successfully.
 
 _Last updated: November 2025_  
 _Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricardo Coll González, Dominik Turowski, Youssef Bahaa._
+
 
 
 
