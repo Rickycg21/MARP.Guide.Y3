@@ -111,7 +111,12 @@ Internet access for MARP PDFs and OpenRouter API
 "curl -X POST http://localhost:5001/discover" to discover MARP PDFs & publish DocumentDiscovered event to Extraction.  
 Extraction and Indexing process run asynchronously via RabbitMQ events.  
 
-"curl -X POST http://localhost:5005/chat" to ask a question.  
+! - In case of running the program for a consecutive time run:
+"docker compose up -d chat --force-recreate"
+
+"$body = @{ question = "(place your question between the quotation marks)"; top_k = 3 } | ConvertTo-Json
+  Invoke-RestMethod -Method Post -Uri "http://localhost:5005/chat" `
+    -ContentType "application/json" -Body $body" to ask a question.  
 Chat calls Retrieval & returns an answer with ≥ 1 citation.  
 
 "docker compose logs -f ingestion extraction indexing retrieval chat" to view service logs.  
