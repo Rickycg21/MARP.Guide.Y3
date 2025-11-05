@@ -72,12 +72,14 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 
 ## 📈 Sprint Progress Summary
 
-- **Total planned items:** 28  
-- **Completed:** 21 ✅   
-- **Planned (next sprint):** 7 🔜  
+- **Total planned items:** 33  
+- **Completed:** 26 ✅  
+- **In progress:** 2 🔄  
+- **Planned (next sprint):** 5 🔜  
 
-Overall sprint completion: **~75% functional coverage achieved**.  
-Core RAG pipeline delivered and integrated successfully.
+Overall sprint completion: **≈75% functional coverage achieved.**  
+Core RAG pipeline successfully implemented across all services.  
+Unit tests initiated for each component; full automation and CI integration scheduled for Sprint 2.
 
 ---
 
@@ -92,6 +94,7 @@ Core RAG pipeline delivered and integrated successfully.
 
 _Last updated: November 2025_  
 _Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricardo Coll González, Dominik Turowski, Youssef Bahaa._
+
 
 
 
