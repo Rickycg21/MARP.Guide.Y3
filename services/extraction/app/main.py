@@ -113,10 +113,11 @@ def status_all():
 async def _do_extract(document_id: str, correlation_id: str):
     """
     Performs the extraction workflow:
-      1) Convert PDF → text (extractor.py)
-      2) Append metadata JSONL (TextRecord)
-      3) Write final "done" status
-      4) Publish DocumentExtracted (for Indexing)
+      1) Convert PDF -> text (extractor.py)
+      2) Fetch title & URL from ingestion
+      3) Append metadata JSONL (TextRecord)
+      4) Write final "done" status
+      5) Publish DocumentExtracted (for Indexing)
 
     On any exception:
       - Logs stacktrace
@@ -126,9 +127,24 @@ async def _do_extract(document_id: str, correlation_id: str):
         # 1) PDF -> text
         text_path, page_count, token_count = extract_to_text(document_id)
 
-        # 2) Record metadata
+        # 2) Look up title & url from ingestion metadata if available
+        ingestion_meta_path = os.path.join(settings.data_root, "pdf_metadata.jsonl")
+        title = "Unknown Title"
+        url = None
+        if os.path.exists(ingestion_meta_path):
+            with open(ingestion_meta_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    rec = json.loads(line)
+                    if rec.get("document_id") == document_id:
+                        title = rec.get("title", title)
+                        url = rec.get("url", url)
+                        break
+
+        # 3) Record metadata
         meta = TextRecord(
             document_id=document_id,
+            title= title,
+            url= url,
             text_path=text_path,
             page_count=page_count,
             token_count=token_count,
@@ -137,14 +153,16 @@ async def _do_extract(document_id: str, correlation_id: str):
         ).model_dump()
         _append_jsonl(META_PATH, meta)
 
-        # 3) Record status
+        # 4) Record status
         _status_upsert(document_id, "done", "extraction completed")
 
-        # 4) Publish DocumentExtracted
+        # 5) Publish DocumentExtracted
         evt = new_event(
             "DocumentExtracted",
             payload={
                 "documentId": document_id,
+                "title": title,
+                "url": url,
                 "textPath": text_path,
                 "pageCount": page_count,
                 "tokenCount": token_count,
