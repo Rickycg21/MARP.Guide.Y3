@@ -103,5 +103,5 @@ Each item includes a short description, priority, and current status.
 ---
 
 _Last updated: November 2025_  
-_Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricky C., and team members_
+_Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricardo Coll González, Dominik Turowski, Youssef Bahaa.
 
