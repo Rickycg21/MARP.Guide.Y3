@@ -81,7 +81,7 @@ Each item includes a short description, priority, and current status.
 | INF-2 | Implement RabbitMQ broker | Setup AMQP queues for inter-service communication. | High | ✅ Done |
 | INF-3 | Add automated tests | Minimum 10–15 unit/integration tests. | High | 🔜 Planned |
 | INF-4 | GitHub Actions CI pipeline | Run tests automatically on push. | Medium | 🔜 Planned |
-| INF-5 | Documentation under `/docs` | Architecture, API specs, events, Scrum artefacts. | High | ✅ Done |
+| INF-5 | Documentation under `/docs` | Architecture, API specs, events, Scrum artefacts. | High | 🔄 In progress |
 
 ---
 
