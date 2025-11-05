@@ -52,13 +52,13 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 ### 🔄 In Progress / Carry-Over (to Sprint 2)
 | Epic | ID | Task | Responsible | Status | Notes |
 |------|----|-------|--------------|---------|-------|
-| **Monitoring** | MON-2 | Event counter metrics | - | 🔜 | Dashboard under development |
-| **Infrastructure** | INF-3 | Add automated tests | - | 🔜 | Test catalogue being created |
-| **Infrastructure** | INF-4 | GitHub Actions CI pipeline | Diego | 🔄 | CI config draft complete |
+| **Monitoring** | MON-2 | Event counter metrics | - | 🔜 | Planned for Assessment 2 |
+| **Infrastructure** | INF-3 | Add automated tests | All | 🔜 | Planned for Assessment 2 |
+| **Infrastructure** | INF-4 | GitHub Actions CI pipeline | Diego | 🔄 | CI tests being implemented |
 | **Monitoring** | MON-3 | `/metrics` endpoint | - | 🔜 | Planned for Assessment 2 |
-| **RAG Chat** | RAG-4 | Generate answers with ≥2 citations | - | 🔜 | Scheduled for next sprint |
-| **UX Interface** | UX-1 | Build chat UI (React) | - | 🔜 | Next increment |
-| **UX Interface** | UX-2 | Add feedback feature | - | 🔜 | Low priority for final polish |
+| **RAG Chat** | RAG-4 | Generate answers with ≥2 citations | - | 🔜 | Planned for Assessment 2 |
+| **UX Interface** | UX-1 | Build chat UI (React) | - | 🔜 | Planned for Assessment 2 |
+| **UX Interface** | UX-2 | Add feedback feature | - | 🔜 | Planned for Assessment 2 |
 
 ---
 
@@ -84,4 +84,5 @@ Core RAG pipeline delivered and integrated successfully.
 
 _Last updated: November 2025_  
 _Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricardo Coll González, Dominik Turowski, Youssef Bahaa._
+
 
