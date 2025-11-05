@@ -29,23 +29,30 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 | **Ingestion** | ING-1 | Discover MARP PDF URLs | - | ✅ | Automatic discovery from university site implemented |
 |  | ING-2 | Download PDFs and store metadata | - | ✅ | PDFs saved under `/data/text/` |
 |  | ING-3 | Publish `DocumentDiscovered` event | - | ✅ | Event schema created and tested |
+|  | TEST-ING | Unit tests for ingestion workflow | - | ✅ | Basic endpoint and event tests added (pytest) |
 | **Extraction** | EXT-1 | Parse PDFs into clean text | - | ✅ | Implemented using pdfplumber |
 |  | EXT-2 | Store extracted text as JSON | - | ✅ | JSON output ready for Indexing |
 |  | EXT-3 | Publish `DocumentExtracted` event | - | ✅ | Event triggers Indexing workflow |
+|  | TEST-EXT | Unit tests for extraction logic | - | ✅ | Verified text parsing and event emission |
 | **Indexing** | IDX-1 | Implement chunking strategy | Diego | ✅ | Custom chunking (~450 tokens, 50 overlap) |
 |  | IDX-2 | Generate embeddings | Diego | ✅ | Using `sentence-transformers` model |
 |  | IDX-3 | Store embeddings in ChromaDB | Diego | ✅ | Embedded vectors saved with metadata |
 |  | IDX-4 | Publish `ChunksIndexed` event | Diego | ✅ | Triggers Retrieval service |
+|  | TEST-IDX | Unit tests for chunking & embedding pipeline | Diego | ✅ | Coverage for chunking, embedding, and storage flow |
 | **Retrieval** | RET-1 | Implement `/search` endpoint | - | ✅ | Returns top-k chunks with metadata |
 |  | RET-2 | Include page number + title + URL | - | ✅ | Ensures full citation data |
 |  | RET-3 | Publish `RetrievalCompleted` event | - | ✅ | Forwarded to Monitoring service |
+|  | TEST-RET | Unit tests for retrieval API | - | ✅ | Verified ranking logic and response formatting |
 | **RAG Chat** | RAG-1 | Implement `/chat` endpoint | - | ✅ | Integrated OpenRouter API |
 |  | RAG-2 | Prompt engineering | - | ✅ | Ensures citation format |
 |  | RAG-3 | Generate answers with ≥1 citation | - | ✅ | Basic RAG pipeline functional |
 |  | RAG-5 | Publish `AnswerGenerated` event | - | ✅ | Final event completes workflow |
+|  | TEST-RAG | Unit tests for RAG response builder | - | ✅ | Covered prompt assembly and LLM call simulation |
 | **Infrastructure** | INF-1 | Docker Compose setup | Diego, Youssef | ✅ | Verified multi-service startup |
 |  | INF-2 | RabbitMQ integration | - | ✅ | Fully connected via AMQP |
 |  | INF-5 | Documentation under `/docs` | All | ✅ | Architecture, API, and Scrum artefacts ready |
+|  | TEST-INF | Basic service health & container tests | Diego | ✅ | Smoke tests confirm all services reachable |
+
 
 ---
 
@@ -84,5 +91,6 @@ Core RAG pipeline delivered and integrated successfully.
 
 _Last updated: November 2025_  
 _Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricardo Coll González, Dominik Turowski, Youssef Bahaa._
+
 
 
