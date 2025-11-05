@@ -52,7 +52,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
     "downloadPath": "/data/pdfs/Assessment_Regulations.pdf",
     "pages": 48,
     "discoveredAt": "2025-10-21T10:15:00Z",
-    "fileSize": 2457600
   }
 }
 ```
@@ -68,16 +67,16 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
   "version": "1.0",
   "payload": {
     "documentId": "marp-2025-policy-v3",
+    "title": "Assessment Regulations 2025",
+    "url": "https://www.lancaster.ac.uk/.../Assessment_Regulations.pdf",
     "textPath": "/data/text/marp-2025-policy-v3.txt",
     "pageCount": 48,
     "tokenCount": 12500,
-    "metadata": {
-      "title": "Assessment Regulations 2025",
-      "extractedBy": "pdfplumber",
-      "extractedAt": "2025-10-21T10:22:00Z"
+    "extractedBy": "pdfplumber",
+    "extractedAt": "2025-10-21T10:22:00Z"
     }
   }
-}
+
 ```
 ### 3. ChunksIndexed
 ```json

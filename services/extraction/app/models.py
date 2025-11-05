@@ -1,7 +1,7 @@
 # Pydantic data models (schemas) for the extraction service.
 
 from typing import Optional, List, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, AnyHttpUrl
 
 # -----------------------------------------------------------------------------
 # REST response models
@@ -42,6 +42,8 @@ class TextRecord(BaseModel):
     DocumentExtracted event payload).
     """
     document_id: str   # Stable doc ID (same as ingestion)
+    title: str # Human-readable label extracted from the <a> tag (hyperlink) text 
+    url: AnyHttpUrl # Canonical absolute URL to the PDF (validated as HTTP/HTTPS)
     text_path: str     # Local path to the extracted text under DATA_ROOT/text/
     page_count: int    # Number of pages in the PDF
     token_count: int   # Number of tokens in extracted text (tiktoken for GPT-4/4o)

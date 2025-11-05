@@ -5,7 +5,7 @@ Convert downloaded PDFs into structured text and metadata, then publish extracti
 
 ## Data Owned
 - `data/text/` — Extracted plain-text files per PDF, referenced by *DocumentExtracted.payload.textPath*
-- `data/text_metadata.jsonl` — Per-document extraction metadata (document_id, text_path, page_count, token_count, extracted_by, extracted_at)
+- `data/text_metadata.jsonl` — Per-document extraction metadata (document_id, title, url, text_path, page_count, token_count, extracted_by, extracted_at)
 - `data/text_status.jsonl` — Append-only status log (document_id, status `pending|done|error`, message)
 
 ## API Endpoints
