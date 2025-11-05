@@ -140,7 +140,7 @@ def chunk_text_semantic(
 
     def flush_chunk():
         """Emits the current chunk and prepares overlap for next chunk."""
-        nonlocal counter, current_chunk, current_tokens, next_chunk_prefix_ids
+        nonlocal counter, current_chunk, current_tokens, next_chunk_prefix_ids, current_page
         text_out = current_chunk.strip()
         if not text_out:
             return
@@ -153,7 +153,7 @@ def chunk_text_semantic(
             "url": url,
             "page": current_page if current_page is not None else 1
         })
-        
+
         counter += 1
         # Prepare overlap for next chunk
         token_ids = enc.encode(text_out)
@@ -230,6 +230,7 @@ def chunk_text_semantic(
         f"total {total_tokens} tokens, avg {avg_tokens:.1f}t/chunk)"
     )
 
+    print(f"[DEBUG] Ejemplo de metadatos: {chunks[0]}")
     return chunks
 
 def generate_embeddings(chunks):
