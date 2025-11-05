@@ -60,13 +60,14 @@ async def publish_retrieval_completed(
             if s is not None:
                 top_score = s if top_score is None else max(top_score, s)
 
-        # Map results to the required minimal shape
+        # Map results to the required minimal shape (now includes url)
         payload_results = []
         for r in results or []:
             payload_results.append({
                 "docId": r.get("document_id"),
                 "page": r.get("page"),
                 "title": r.get("title"),
+                "url": r.get("url"),
                 "score": (r.get("scores") or {}).get("combined"),
             })
 
@@ -88,11 +89,12 @@ async def publish_retrieval_completed(
         }
 
         maybe = _publish(envelope, exchange=EVENT_EXCHANGE)
-        if hasattr(maybe, "__await__"):  # support async or sync publisher
+        if hasattr(maybe, "__await__"):
             await maybe
 
     except Exception as e:
         log.exception("publish failed: %s", e)
+
 
 # -----------------------------------------------------------------------------
 # App setup

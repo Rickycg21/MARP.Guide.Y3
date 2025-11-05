@@ -137,18 +137,13 @@ def chunk_text_semantic(
         while i + 1 < len(parts):
             try:
                 page_num = int(parts[i])
-
-#################### Error handling for page number parsing is here, this happens everytime ####################
-
+                
             except:
                 # If parsing fails, assume sequential numbering
                 page_num = (pages[-1][0] + 1) if pages else 1
             page_text = parts[i + 1]
             pages.append((page_num, page_text))
             i += 2
-
-############################################################################################################################
-
 
     # Prepare for chunk generation
     chunks = []
