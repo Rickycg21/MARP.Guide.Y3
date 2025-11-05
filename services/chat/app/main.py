@@ -1,13 +1,13 @@
 """
-Chat Service - FastAPI app implementing /chat to orchestrate RAG answers
-that meet the MARP-Guide requirements while remaining terminal-friendly.
+---Chat Service--- 
 
-Key points:
-- Talks to Retrieval Service over HTTP (/search?q=...&top_k=...)
-- Calls OpenRouter's gpt-4o mini model for generation (plain HTTPX client)
-- Emits AnswerGenerated events via shared event helpers
-- Appends answer metadata to /data/answer_metadata.jsonl
-- Health endpoint: /health
+FastAPI entrypoint wires retrieval, generation, citation, 
+and event publication into a single /chat endpoint.
+
+Includes:
+ - Configuration / fallbacks for running inside or outside Docker (for testing).
+ - Using shared event helpers, models and utilities (Pydantic schemas, retrieval + LLM helpers).
+ - Appending answer metadata to /data/answer_metadata.jsonl
 """
 
 from __future__ import annotations
@@ -25,7 +25,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 try:
-    from common.config import settings  # type: ignore
+    # shared config
+    from common.config import settings
 except Exception:
     @dataclass(frozen=True)
     class _Settings:
@@ -35,10 +36,11 @@ except Exception:
         data_root: str = os.getenv("DATA_ROOT", "./data")
         log_level: str = os.getenv("LOG_LEVEL", "INFO")
 
-    settings = _Settings()  # type: ignore
+    settings = _Settings()
 
 try:
-    from common.events import new_event, publish_event, now_iso  # type: ignore
+    # shared event helpers for consistent envelope
+    from common.events import new_event, publish_event, now_iso
 except Exception:
     import datetime as _dt
     from dataclasses import dataclass as _dataclass
@@ -97,6 +99,8 @@ try:
     _cit_limit_env = int(os.getenv("CHAT_CITATION_LIMIT", "1"))
 except ValueError:
     _cit_limit_env = 1
+# 1 citation limit controls how many retrieval snippets
+# are forwarded to gpt. Increase it later
 CITATION_LIMIT = max(1, _cit_limit_env)
 
 # --- Data locations ----------------------------------------------------------
@@ -136,14 +140,12 @@ class ChatResponse(BaseModel):
 
 
 def _select_context(chunks: List[RetrievedChunk]) -> List[RetrievedChunk]:
-    """
-    Pick the subset of retrieved chunks that will be turned into citations.
-    Default is a single chunk, matching the current assessment requirement.
-    """
+    # picks subset of retrieved chunks that will be turned into citations
+    # single chunk for now, change later for multiple citations per answer.
     return chunks[:CITATION_LIMIT] if chunks else []
 
-
 # --- OpenRouter call ---------------------------------------------------------
+# Calling LLM and retrieval call logic almost entirely AI generated, with minor tweaks
 async def _llm_answer(question: str, context_blocks: List[RetrievedChunk]) -> Dict[str, Any]:
     """
     Call OpenRouter's chat completions endpoint, returning the generated answer,
@@ -153,6 +155,9 @@ async def _llm_answer(question: str, context_blocks: List[RetrievedChunk]) -> Di
     if not selected:
         raise HTTPException(status_code=500, detail="No context available for generation")
 
+    # Attach contextual metadata that will eventually be echoed back to the
+    # client. Missing titles are replaced with a friendly fallback so the
+    # response structure stays deterministic.
     citations = [
         Citation(
             title=block.title or "MARP Source",
@@ -161,7 +166,8 @@ async def _llm_answer(question: str, context_blocks: List[RetrievedChunk]) -> Di
         )
         for block in selected
     ]
-
+    # Fake LLM was for local testing without having to wait
+    # for prior services to be complete (may be useful in future).
     if os.getenv("LLM_FAKE", "0") == "1":
         citation = citations[0]
         reference = citation.title
@@ -183,6 +189,9 @@ async def _llm_answer(question: str, context_blocks: List[RetrievedChunk]) -> Di
     if not OPENROUTER_API_KEY:
         raise HTTPException(status_code=500, detail="OPENROUTER_API_KEY not configured")
 
+    # Collect lines that will be embedded in the user prompt. We mirror the
+    # numeric index used in the instructions so the LLM can reference the
+    # correct snippet with [1].
     context_lines: List[str] = []
     for idx, block in enumerate(selected, start=1):
         details = []
@@ -239,6 +248,9 @@ async def _llm_answer(question: str, context_blocks: List[RetrievedChunk]) -> Di
 
     text = content.strip()
     if "[1]" not in text:
+        # Defensive append: models occasionally omit the citation marker even
+        # when instructed.  Appending keeps the API contract ("answer ends with
+        # [1]")
         text = f"{text} [1]".strip()
 
     usage = data.get("usage") or {}
@@ -309,6 +321,8 @@ async def _retrieve(
 
     chunks: List[RetrievedChunk] = []
     result_summaries: List[Dict[str, Any]] = []
+    # Normalise the retrieval payload into RetrievedChunk models and collect a
+    # lightweight summary for downstream metadata/event payloads.
     for raw in results:
         snippet = (raw.get("snippet") or "").strip()
         if not snippet:
@@ -353,6 +367,8 @@ async def _retrieve(
         "mode": data.get("mode"),
         "duration_ms": data.get("durationMs"),
         "result_count": len(chunks),
+        # Only keep IDs + scores here; the full snippet text lives in the
+        # context_used section of the stored metadata to avoid duplication.
         "results": result_summaries,
     }
 
@@ -361,6 +377,9 @@ async def _retrieve(
 
 # --- Metadata persistence ----------------------------------------------------
 def _append_answer_metadata(record: Dict[str, Any]) -> None:
+    # Append-only log used for audits and debugging. Keeping it on disk inside
+    # DATA_DIR means the JSONL survives container restarts and can be shipped
+    # elsewhere if required for assessment evidence.
     os.makedirs(os.path.dirname(ANSWER_META_PATH), exist_ok=True)
     with open(ANSWER_META_PATH, "a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -378,6 +397,9 @@ def health() -> Dict[str, str]:
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest) -> ChatResponse:
     start = time.perf_counter()
+    # Corr. ID puts retrieval, generation, andAnswerGenerated event
+    # together so monitoring can follow a single request across
+    # services. session_id enables conversation on the client side.
     correlation_id = str(uuid.uuid4())
     session_id = req.session_id or str(uuid.uuid4())
 
@@ -416,6 +438,7 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
     # 4) Publish AnswerGenerated event for downstream consumers
     try:
+        # payload looks like the stored metadata for monitoring services
         event = new_event(
             "AnswerGenerated",
             payload={
@@ -440,7 +463,6 @@ async def chat(req: ChatRequest) -> ChatResponse:
         logger.warning("Failed to publish AnswerGenerated event: %s", exc)
 
     return response
-
 
 # Uvicorn entrypoint for Docker
 if __name__ == "__main__":
