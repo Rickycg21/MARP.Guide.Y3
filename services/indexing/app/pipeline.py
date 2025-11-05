@@ -254,12 +254,18 @@ def store_embeddings(document_id: str, chunks):
 
     metadatas = []
     for c in chunks:
+        page_value = c.get("page", 1)
+        try:
+            page_value = int(page_value)
+        except Exception:
+            page_value = 1  
+
         metadatas.append({
             "document_id": c.get("document_id", document_id),
             "chunk_id": c["chunkId"],
             "title": c.get("title"),
             "url": c.get("url"),
-            "page": c.get("page", 1)
+            "page": page_value
         })
 
     collection.add(
