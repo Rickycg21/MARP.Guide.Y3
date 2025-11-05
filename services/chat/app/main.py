@@ -90,7 +90,7 @@ logger = logging.getLogger("chat-service")
 RETRIEVAL_URL = os.getenv("RETRIEVAL_URL", "http://retrieval:8000")
 RETRIEVAL_MODE = os.getenv("RETRIEVAL_MODE", "semantic")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openrouter/openai/gpt-4o-mini")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 OPENROUTER_BASE = os.getenv("OPENROUTER_BASE", "https://openrouter.ai/api/v1")
 
 try:
