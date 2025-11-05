@@ -141,7 +141,7 @@ async def _do_extract(document_id: str, correlation_id: str):
                         break
 
         # 3) Record metadata
-        meta = TextRecord(
+        record = TextRecord(
             document_id=document_id,
             title= title,
             url= url,
@@ -150,7 +150,9 @@ async def _do_extract(document_id: str, correlation_id: str):
             token_count=token_count,
             extracted_by= "pdfplumber",
             extracted_at= now_iso()
-        ).model_dump()
+        )
+
+        meta = record.model_dump(mode="json")
         _append_jsonl(META_PATH, meta)
 
         # 4) Record status
