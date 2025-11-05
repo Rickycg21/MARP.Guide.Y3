@@ -25,6 +25,8 @@ async def handle_document(env: EventEnvelope, msg: AbstractIncomingMessage):
         correlation_id = env.correlationId
         doc_id = payload["documentId"]
         text_path = payload["textPath"]
+        title = payload.get("title")
+        url = payload.get("url")
 
         print(f"[Indexing]Received DocumentExtracted for: {doc_id}")
         print(f"Text path: {text_path}")
@@ -32,7 +34,7 @@ async def handle_document(env: EventEnvelope, msg: AbstractIncomingMessage):
         text = await read_text_file(text_path)
         print(f"[Indexing] Text length: {len(text)} chars")
 
-        chunks = chunk_text_semantic(text, doc_id)
+        chunks = chunk_text_semantic(text, doc_id, title=title, url=url)
 
         chunks = generate_embeddings(chunks)
 
@@ -81,6 +83,8 @@ async def read_text_file(text_path: str) -> str:
 def chunk_text_semantic(
     text: str,
     doc_id: str,
+    title: str | None = None,
+    url: str | None = None,
     max_tokens: int = 450,
     overlap_tokens: int = 50
 ):
@@ -95,8 +99,24 @@ def chunk_text_semantic(
     def tok_count(s: str) -> int:
         return len(enc.encode(s))
 
-    pages = re.split(r"--- page \d+ ---", text)
-    pages = [p.strip() for p in pages if p.strip()]
+    parts = re.split(r"--- page (\d+) ---", text)
+    # parts = [maybe_text_before, "1", page1_text, "2", page2_text, ...]
+    pages = []
+    if parts:
+        # If the text does NOT start with '--- page N ---'
+        i = 0
+        if parts[0].strip():
+            # We don't know the page, assume 1
+            pages.append((1, parts[0]))
+        i = 1
+        while i + 1 < len(parts):
+            try:
+                page_num = int(parts[i])
+            except:
+                page_num = (pages[-1][0] + 1) if pages else 1
+            page_text = parts[i + 1]
+            pages.append((page_num, page_text))
+            i += 2
 
     chunks = []
     counter = 1
@@ -107,6 +127,7 @@ def chunk_text_semantic(
     #State for current chunk being built
     current_chunk = ""
     current_tokens = 0
+    current_page = None
 
     def start_chunk_with_overlap_if_needed():
         """If overlap prefix is pending, prepends it to current chunk."""
@@ -123,10 +144,16 @@ def chunk_text_semantic(
         text_out = current_chunk.strip()
         if not text_out:
             return
+        
         chunks.append({
             "chunkId": f"{doc_id}-{counter:04}",
-            "text": text_out
+            "text": text_out,
+            "document_id": doc_id,
+            "title": title,
+            "url": url,
+            "page": current_page if current_page is not None else 1
         })
+        
         counter += 1
         # Prepare overlap for next chunk
         token_ids = enc.encode(text_out)
@@ -135,9 +162,10 @@ def chunk_text_semantic(
         current_chunk = ""
         current_tokens = 0
 
-    for page in pages:
+    for page_num, page_content in pages:
+        current_page = page_num
 
-        paragraphs = re.split(r"\n\s*\n+", page)
+        paragraphs = re.split(r"\n\s*\n+", page_content)
         for para in paragraphs:
             para = para.strip()
             if not para:
@@ -222,13 +250,25 @@ def store_embeddings(document_id: str, chunks):
     ids = [chunk["chunkId"] for chunk in chunks]
     embeddings = [chunk["embedding"] for chunk in chunks]
     texts = [chunk["text"] for chunk in chunks]
+
+    metadatas = []
+    for c in chunks:
+        metadatas.append({
+            "document_id": c.get("document_id", document_id),
+            "chunk_id": c["chunkId"],
+            "title": c.get("title"),
+            "url": c.get("url"),
+            "page": c.get("page", 1)
+        })
+
     collection.add(
         ids=ids,
         embeddings=embeddings,
         documents=texts,
-        metadatas=[{"document_id": document_id}] * len(chunks)
+        metadatas=metadatas
     )
-    print(f"[Indexing] Stored {len(chunks)} chunks in ChromaDB")
+
+    print(f"[Indexing] Stored {len(chunks)} chunks in ChromaDB with metadata (title, url, page)")
 
 def log_index_metadata(document_id: str, chunk_count: int):
     """
@@ -285,6 +325,25 @@ async def publish_chunks_indexed(doc_id: str, chunk_count: int, correlation_id: 
     except Exception as e:
         print(f"[Indexing] Failed to publish ChunksIndexed: {e}")
 
+def _lookup_title_url_from_text_metadata(document_id: str):
+    """
+    Searches for title and url in /data/text_metadata.jsonl (written by Extraction).
+    """
+    meta_path = Path("/data/text_metadata.jsonl")
+    title, url = None, None
+    if meta_path.exists():
+        with open(meta_path, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    rec = json.loads(line)
+                    if rec.get("document_id") == document_id:
+                        title = rec.get("title")
+                        url = rec.get("url")
+                        break
+                except Exception:
+                    continue
+    return title, url
+
 async def manual_index_document(document_id: str, text_path: str, correlation_id: str):
     """
     Manual re-indexing of an existing document.
@@ -296,7 +355,7 @@ async def manual_index_document(document_id: str, text_path: str, correlation_id
 
         # Delete old embeddings
         try:
-            deleted = collection.delete(where={"document_id": document_id})
+            collection.delete(where={"document_id": document_id})
             print(f"[Manual Index] Old embeddings deleted for {document_id}")
         except Exception as e:
             print(f"[Manual Index] No previous embeddings to remove ({e})")
@@ -304,8 +363,11 @@ async def manual_index_document(document_id: str, text_path: str, correlation_id
         # Read original text
         text = await read_text_file(text_path)
 
+        # Lookup title and url from text metadata
+        title, url = _lookup_title_url_from_text_metadata(document_id)
+
         # Generate new embeddings
-        chunks = chunk_text_semantic(text, document_id)
+        chunks = chunk_text_semantic(text, document_id, title=title, url=url)
         chunks = generate_embeddings(chunks)
 
         # Store in ChromaDB
