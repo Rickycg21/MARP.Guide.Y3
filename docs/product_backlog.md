@@ -19,7 +19,7 @@ Each item includes a short description, priority, and current status.
 | ING-1 | Discover MARP PDF URLs | Automatically discover all MARP-related PDFs from the official Lancaster website. | High | ✅ Done |
 | ING-2 | Download PDFs | Fetch and store all discovered MARP PDFs locally with metadata (URL, title, date). | High | ✅ Done |
 | ING-3 | Publish `DocumentDiscovered` event | Notify the Extraction service when a new document is fetched. | High | ✅ Done |
-| ING-4 | Implement `/discover` endpoint | Allow manual triggering of discovery process via API. | Medium | ✅ Done |
+| ING-4 | Implement `/discover` endpoint | Allow manual triggering of discovery process via API. | High | ✅ Done |
 
 ---
 
@@ -29,7 +29,7 @@ Each item includes a short description, priority, and current status.
 | EXT-1 | Parse PDFs to text | Convert PDFs into clean, per-page text using PyPDF2/pdfplumber. | High | ✅ Done |
 | EXT-2 | Store extracted text as JSON | Save structured text and metadata for downstream services. | High | ✅ Done |
 | EXT-3 | Publish `DocumentExtracted` event | Notify Indexing service after successful extraction. | High | ✅ Done |
-| EXT-4 | Implement health endpoint | Provide `/health` for Docker Compose checks. | Low | ✅ Done |
+| EXT-4 | Implement health endpoint | Provide `/health` for Docker Compose checks. | High | ✅ Done |
 
 ---
 
@@ -40,7 +40,7 @@ Each item includes a short description, priority, and current status.
 | IDX-2 | Generate embeddings | Use `sentence-transformers` to create dense vector representations. | High | ✅ Done |
 | IDX-3 | Store embeddings in ChromaDB | Save chunks + vectors with metadata. | High | ✅ Done |
 | IDX-4 | Publish `ChunksIndexed` event | Notify Retrieval service when vectors are stored. | High | ✅ Done |
-| IDX-5 | Test indexing workflow | Ensure end-to-end indexing pipeline runs correctly. | Medium | 🔄 In progress |
+| IDX-5 | Test indexing workflow | Ensure end-to-end indexing pipeline runs correctly. | High | ✅ Done |
 
 ---
 
@@ -68,7 +68,7 @@ Each item includes a short description, priority, and current status.
 ### 📊 EPIC 6 — Monitoring (Tier 1 Feature)
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
-| MON-1 | Health checks dashboard | Display `/health` status of all services. | Medium | ✅ Done |
+| MON-1 | Health checks dashboard | Display `/health` status of all services. | High | ✅ Done |
 | MON-2 | Event counter metrics | Track number of processed events by type. | Medium | 🔄 In progress |
 | MON-3 | REST API for `/metrics` | Expose metrics for Grafana or CI integration. | Low | 🔜 Planned |
 
@@ -88,7 +88,7 @@ Each item includes a short description, priority, and current status.
 ### 🧭 EPIC 8 — UX & Chat Interface (Tier 2 Feature)
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
-| UX-1 | Build chat UI (React) | Simple interface for sending questions and showing answers + citations. | Medium | 🔜 Planned |
+| UX-1 | Build chat UI (React) | Simple interface for sending questions and showing answers + citations. | High | 🔜 Planned |
 | UX-2 | Add feedback option | Allow user thumbs-up/down feedback for answers. | Low | 🔜 Planned |
 
 ---
