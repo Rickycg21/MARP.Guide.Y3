@@ -20,6 +20,7 @@ Each item includes a short description, priority, and current status.
 | ING-2 | Download PDFs | Fetch and store all discovered MARP PDFs locally with metadata (URL, title, date). | High | ✅ Done |
 | ING-3 | Publish `DocumentDiscovered` event | Notify the Extraction service when a new document is fetched. | High | ✅ Done |
 | ING-4 | Implement `/discover` endpoint | Allow manual triggering of discovery process via API. | High | ✅ Done |
+| TEST-ING | Unit tests for ingestion workflow | Validate `/discover` endpoint and event emission. | Medium | 🔜 Planned |
 
 ---
 
@@ -30,6 +31,7 @@ Each item includes a short description, priority, and current status.
 | EXT-2 | Store extracted text as JSON | Save structured text and metadata for downstream services. | High | ✅ Done |
 | EXT-3 | Publish `DocumentExtracted` event | Notify Indexing service after successful extraction. | High | ✅ Done |
 | EXT-4 | Implement health endpoint | Provide `/health` for Docker Compose checks. | High | ✅ Done |
+| TEST-EXT | Unit tests for extraction logic | Validate parsing output and event triggering. | Medium | 🔜 Planned |
 
 ---
 
@@ -41,6 +43,7 @@ Each item includes a short description, priority, and current status.
 | IDX-3 | Store embeddings in ChromaDB | Save chunks + vectors with metadata. | High | ✅ Done |
 | IDX-4 | Publish `ChunksIndexed` event | Notify Retrieval service when vectors are stored. | High | ✅ Done |
 | IDX-5 | Test indexing workflow | Ensure end-to-end indexing pipeline runs correctly. | High | ✅ Done |
+| TEST-IDX | Unit tests for chunking & embedding pipeline | Cover chunking, embedding, and storage workflow. | Medium | 🔄 In progress |
 
 ---
 
@@ -51,6 +54,7 @@ Each item includes a short description, priority, and current status.
 | RET-2 | Handle metadata and ranking | Include page number, title, and URL in each result. | High | ✅ Done |
 | RET-3 | Publish `RetrievalCompleted` event | Notify Monitoring/Chat when retrieval is finished. | Medium | ✅ Done |
 | RET-4 | Support hybrid search (BM25 + dense) | Tier-2 feature for Assessment 2. | Medium | 🔜 Planned |
+| TEST-RET | Unit tests for retrieval API | Verify ranking logic and response metadata. | Medium | 🔜 Planned |
 
 ---
 
@@ -62,6 +66,7 @@ Each item includes a short description, priority, and current status.
 | RAG-3 | Generate answers with ≥1 citation | Assessment 1 requirement. | High | ✅ Done |
 | RAG-4 | Generate answers with ≥2 citations | Final MVP requirement. | High | 🔜 Planned |
 | RAG-5 | Publish `AnswerGenerated` event | Notify Monitoring service. | Medium | ✅ Done |
+| TEST-RAG | Unit tests for RAG response builder | Cover prompt assembly and LLM call simulation. | Medium | 🔜 Planned |
 
 ---
 
@@ -69,8 +74,9 @@ Each item includes a short description, priority, and current status.
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | MON-1 | Health checks dashboard | Display `/health` status of all services. | High | ✅ Done |
-| MON-2 | Event counter metrics | Track number of processed events by type. | Medium | 🔄 In progress |
+| MON-2 | Event counter metrics | Track number of processed events by type. | Medium | 🔜 Planned |
 | MON-3 | REST API for `/metrics` | Expose metrics for Grafana or CI integration. | Low | 🔜 Planned |
+| TEST-MON | Unit tests for monitoring endpoints | Verify health and metrics APIs. | Low | 🔜 Planned |
 
 ---
 
@@ -80,8 +86,10 @@ Each item includes a short description, priority, and current status.
 | INF-1 | Docker Compose setup | All services start and connect via `docker compose up`. | High | ✅ Done |
 | INF-2 | Implement RabbitMQ broker | Setup AMQP queues for inter-service communication. | High | ✅ Done |
 | INF-3 | Add automated tests | Minimum 10–15 unit/integration tests. | High | 🔜 Planned |
-| INF-4 | GitHub Actions CI pipeline | Run tests automatically on push. | Medium | 🔜 Planned |
-| INF-5 | Documentation under `/docs` | Architecture, API specs, events, Scrum artefacts. | High | 🔄 In progress |
+| INF-4 | GitHub Actions CI pipeline | Run tests automatically on push. | Medium | 🔄 In progress |
+| INF-5a | Service documentation under `/docs/services` | Architecture, API specs, and event schemas. | High | ✅ Done |
+| INF-5b | Project documentation under `/docs` | Scrum artefacts, markdown deliverables, and reports. | High | ✅ Done |
+| TEST-INF | Basic service health & container tests | Smoke tests confirm Docker and RabbitMQ connectivity. | Medium | ✅ Done |
 
 ---
 
@@ -90,18 +98,19 @@ Each item includes a short description, priority, and current status.
 |----|-------------------|--------------|-----------|---------|
 | UX-1 | Build chat UI (React) | Simple interface for sending questions and showing answers + citations. | High | 🔜 Planned |
 | UX-2 | Add feedback option | Allow user thumbs-up/down feedback for answers. | Low | 🔜 Planned |
+| TEST-UX | Unit tests for UI components | Validate chat input/output rendering. | Low | 🔜 Planned |
 
 ---
 
 ## 🧩 Definition of Done
 - Code implemented, reviewed, and merged into `develop` branch.  
 - Service runs in Docker Compose with health check passing.  
-- Event published and consumed successfully.  
+- Events published and consumed successfully.  
 - Documentation updated in `/docs/`.  
-- All tests passing (where applicable).
+- Unit tests implemented or planned across all services.  
+- All critical tests passing (where applicable).
 
 ---
 
-_Last updated: November 2025_  
+_Last updated: November 2025 (post–Sprint 1 review)_  
 _Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricardo Coll González, Dominik Turowski, Youssef Bahaa._
-
