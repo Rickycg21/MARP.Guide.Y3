@@ -17,11 +17,11 @@ The full core architecture is functional and all mandatory events are implemente
 
 ---
 
-## ✅ What Went Well
+## ✅ Well done
 
 | Category | Notes |
 |-----------|-------|
-| **Collaboration & Communication** | The team maintained active coordination via Discord and GitHub Projects. Daily updates kept everyone aware of dependencies. |
+| **Collaboration & Communication** | The team maintained active coordination via Discord and GitHub Projects. Daily updates on whatsapp group kept everyone aware of dependencies. One-two weekly meetups to talk further tasks|
 | **Architecture Design** | Clear separation of services (Ingestion, Extraction, Indexing, Retrieval, Chat, Monitoring). Each runs independently in Docker. |
 | **Event Flow Implementation** | All five key events (`DocumentDiscovered`, `DocumentExtracted`, `ChunksIndexed`, `RetrievalCompleted`, `AnswerGenerated`) were successfully integrated. |
 | **Code Quality & Testing** | Each service includes health checks and local tests. The pipeline runs end-to-end without blocking errors. |
@@ -30,19 +30,17 @@ The full core architecture is functional and all mandatory events are implemente
 
 ---
 
-## ⚠️ What Didn’t Go So Well
+## ⚠️ Issues
 
 | Category | Issues Encountered |
 |-----------|-------------------|
-| **Integration Timing** | Some delays occurred while merging branches for Indexing and Retrieval due to overlapping dependencies. |
 | **Testing Coverage** | Unit and integration testing were postponed to Sprint 2 to prioritize functionality. |
 | **Monitoring Dashboard** | Metrics and visual dashboards were partially implemented, requiring further refinement. |
 | **CI/CD Setup** | GitHub Actions pipeline not yet completed — test automation still manual. |
-| **Time Management** | Some underestimation of debugging time during embedding generation and message queue testing. |
 
 ---
 
-## 🚀 What to Improve Next Sprint
+## 🚀 To do Next Sprint
 
 | Improvement Area | Action Plan |
 |-------------------|-------------|
@@ -50,26 +48,15 @@ The full core architecture is functional and all mandatory events are implemente
 | **Monitoring & Metrics** | Finalize `/metrics` endpoint and event counter dashboard for Assessment 2. |
 | **UI Development** | Begin work on the Chat Frontend (Tier 2 feature). |
 | **Hybrid Search Feature** | Implement BM25 + dense retrieval fusion for higher precision in answers. |
-| **Process Efficiency** | Plan smaller, more focused tasks to reduce context switching between services. |
 | **Continuous Integration** | Ensure `docker compose up` and tests run automatically after each push. |
-
----
-
-## 💬 Team Reflection Quotes
-
-> **Diego:** “Getting the embedding pipeline right was tricky, but once ChromaDB and RabbitMQ were stable, everything clicked.”  
-> **Ricardo:** “The ingestion and document flow worked better than expected. Seeing events trigger downstream services in real time was rewarding.”  
-> **Dominik:** “Retrieval logic was smooth — but we need more test coverage before the next sprint.”  
-> **Youssef:** “Chat integration was challenging but seeing the full system answer questions was a great milestone.”
 
 ---
 
 ## 🏁 Summary
 
 - **Sprint Success:** ✅ Core RAG pipeline delivered and integrated.  
-- **Pending Tasks:** Testing, CI/CD setup, Monitoring dashboard.  
-- **Team Morale:** High — confident for Sprint 2 delivery.  
-- **Next Focus:** Move toward production readiness with automated testing, monitoring, and hybrid retrieval.
+- **Pending Tasks:** Testing, CI/CD setup, Monitoring dashboard (Sprint 2).  
+- **Team Work:** High — confident for Sprint 2 delivery and good communication between members.  
 
 ---
 
