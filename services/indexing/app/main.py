@@ -13,21 +13,28 @@ app = FastAPI(title="Indexing Service")
 
 @app.on_event("startup")
 async def startup_event():
+    """Startup event to begin consuming DocumentExtracted events."""
     asyncio.create_task(consume("DocumentExtracted", handle_document))
     print("Indexing Service started and listening for DocumentExtracted events.")
 
+
 @app.get("/health")
 async def health():
+    """Health check endpoint."""
     return {"status": "ok"}
 
 @app.post("/index/{document_id}", status_code=202)
 async def index_document(document_id: str, background_tasks: BackgroundTasks):
+    """Allows manual re-indexing of a specific document via HTTP request."""    
 
+    # Construct the path to the document's text file (inside /data/text)
     text_path = Path(settings.data_root) / "text" / f"{document_id}.txt"  
     if not text_path.exists():
         raise HTTPException(status_code=404, detail=f"Text file for document '{document_id}' not found at: {text_path}")
     
     correlation_id = f"manual-{uuid4()}"
+
+    # Schedule the re-indexing process to run in the background
     background_tasks.add_task(manual_index_document, document_id, str(text_path), correlation_id)
 
     return IndexResponse(
