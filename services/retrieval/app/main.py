@@ -4,7 +4,7 @@
 #   - /search: standard retrieval endpoint
 #   - /health: service health
 #   - /dev/consumeChunksIndexed: DEV-only endpoint that simulates "indexer
-#     emitted ChunksIndexed" → run retrieval → optionally publish RetrievalCompleted.
+#     emitted ChunksIndexed" -> run retrieval -> publish RetrievalCompleted.
 # =============================================================================
 
 import os, uuid, json, time, logging, datetime as dt
@@ -88,7 +88,7 @@ async def publish_retrieval_completed(
         }
 
         maybe = _publish(envelope, exchange=EVENT_EXCHANGE)
-        if hasattr(maybe, "__await__"):  # support async or sync publisher
+        if hasattr(maybe, "__await__"): 
             await maybe
 
     except Exception as e:
@@ -140,7 +140,7 @@ async def search(
         log.exception("search failed: %s", e)
         raise HTTPException(500, "Search failed")
 
-    # Shape rows → response models
+    # Shape rows -> response models
     results = [SearchResult(
         document_id=r.get("document_id","unknown"),
         chunk_id=r.get("chunk_id",""),
@@ -167,7 +167,7 @@ async def search(
     return JSONResponse(resp.model_dump(by_alias=True))
 
 # ---- ChunksIndexed manual trigger -----------------------------
-# Simulates indexer → ChunksIndexed event: runs retrieval and (optionally) publishes.
+# Simulates indexer -> ChunksIndexed event: runs retrieval and (optionally) publishes.
 @app.post("/dev/consumeChunksIndexed")
 async def dev_consume_chunks_indexed(event: Dict[str, Any] = Body(...)) -> JSONResponse:
     """DEV-only entrypoint to mimic the event-driven path locally."""
