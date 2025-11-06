@@ -41,7 +41,7 @@ The Indexing Service divides extracted MARP document text into semantically cohe
 | **Average chunk volume per document** | *100–250 chunks* for MARP PDFs (40–80 pages) | Provides manageable vector counts (~40k vectors for full MARP corpus) for efficient retrieval latency within ChromaDB. |
 
 
-### Test Coverage
+## Test Coverage
 Automated tests validate the behavior and reliability of the Indexing Service endpoints and their integration with the local vector store (ChromaDB).
 
 | Test | Endpoint / Component | Purpose | Expected Result |
@@ -66,7 +66,7 @@ pytest tests/test_endpoints.py -v
 _Clean previous test cache_
 pytest --cache-clear
 
-#### Dependencies
+## Dependencies
 
 - **Python 3.13+**
 - **FastAPI** — REST API framework  
@@ -75,7 +75,7 @@ pytest --cache-clear
 - **RabbitMQ** — Event broker  
 - **pytest** — Automated testing
 
-#### Implementation Notes
+## Implementation Notes
 
 - Tests are located in tests/test_endpoints.py and executed using pytest and FastAPI TestClient.
 
