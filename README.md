@@ -195,6 +195,20 @@ Open RabbitMQ’s web UI at "http://localhost:15672" to view live event publicat
 
 ---
 
+### Tests for Chat service
+"docker compose up --build rabbitmq chat" to build & start Retrieval.  
+
+"docker compose logs -f chat" to view Retrieval logs.  
+
+"curl http://localhost:5005/health" to check health.  
+
+Command: curl -X POST 'http://localhost:5005/chat' -H 'Content-Type: application/json' --data '{"question":"(Place your question in-between the quotation marks)","top_k":3}'
+to ask a question.
+
+"docker compose down" to stop running containers.
+
+---
+
 ## 🧠 Technology Stack Overview
 
 Our MARP-Guide RAG Chatbot is a **Python-based microservices system**.

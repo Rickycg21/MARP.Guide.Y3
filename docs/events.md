@@ -1,13 +1,11 @@
 # MARP-Guide Chatbot — Events
-
 This document defines the event types used across the MARP-Guide RAG pipeline and explains how they connect the microservices through RabbitMQ.  
 All events follow a shared JSON envelope format and are published to durable AMQP queues.
 
 ---
 
 ## Event Catalogue
-
-| **Event Name**         | **Published By**   | **Consumed By**    | **Purpose**                                                                          | **Key Fields in `payload`**                                                           |
+| **Event Name** | **Published By**  | **Consumed By**    | **Purpose**                                                                          | **Key Fields in `payload`**                                                           |
 | ---------------------- | ------------------ | ------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
 | **DocumentDiscovered** | Ingestion Service  | Extraction Service | Signals that a new MARP PDF has been discovered and downloaded.                      | `document_id`, `title`, `url`, `download_path`, `pages`, `discovered_at`              |
 | **DocumentExtracted**  | Extraction Service | Indexing Service   | Confirms that text and metadata were successfully extracted from a PDF.              | `document_id`, `text_path`, `page_count`, `token_count`, `metadata`                   |
@@ -18,7 +16,6 @@ All events follow a shared JSON envelope format and are published to durable AMQ
 ---
 
 ## Common Event Envelope (v1)
-
 All MARP-Guide events follow a **standard envelope** for traceability, versioning, and monitoring.
 
 ```json
@@ -40,7 +37,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ## Event Schemas
 
 ### 1. DocumentDiscovered
-
 ```json
 {
   "eventType": "DocumentDiscovered",
@@ -61,7 +57,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 2. DocumentExtracted
-
 ```json
 {
   "eventType": "DocumentExtracted",
@@ -84,7 +79,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 3. ChunksIndexed
-
 ```json
 {
   "eventType": "ChunksIndexed",
@@ -105,7 +99,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 4. RetrievalCompleted
-
 ```json
 {
   "eventType": "RetrievalCompleted",
@@ -134,7 +127,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 5. AnswerGenerated
-
 ```json
 {
   "eventType": "AnswerGenerated",
