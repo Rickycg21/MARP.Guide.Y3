@@ -171,7 +171,7 @@ Open RabbitMQ’s web UI at "http://localhost:15672" to view live event publicat
 
 "docker compose down" to stop running containers.
 
-_Local tests for functions_
+>Local tests for functions
 
 "pytest -v tests/test_endpoints.py" to run endpoint tests.  
 
