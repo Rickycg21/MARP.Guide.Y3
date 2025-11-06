@@ -1,0 +1,184 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks: [marp_net]
+    restart: unless-stopped
+
+  ingestion:
+    build: ./services/ingestion
+    container_name: ingestion-service
+    environment:
+      - SERVICE_NAME=ingestion
+      - SERVICE_PORT=5001
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
+      - MARP_SOURCE_URL=https://www.lancaster.ac.uk/academic-standards-and-quality/regulations-and-policies/manual-of-academic-regulations-and-procedures/
+    ports:
+      - "5001:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
+
+  extraction:
+    build: ./services/extraction
+    container_name: extraction-service
+    environment:
+      - SERVICE_NAME=extraction-service
+      - SERVICE_PORT=5002
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
+    ports:
+      - "5002:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
+
+  indexing:
+    build: ./services/indexing
+    container_name: indexing-service
+    environment:
+      - SERVICE_NAME=indexing-service
+      - SERVICE_PORT=5003
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
+      - CHROMA_DIR=/data/index
+      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+    ports:
+      - "5003:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
+
+  retrieval:
+    build: ./services/retrieval
+    container_name: retrieval-service
+    environment:
+      - SERVICE_NAME=retrieval-service
+      - SERVICE_PORT=5004
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
+      - CHROMA_DIR=/data/index
+      - CHROMA_COLLECTION=marp_docs
+      - RETRIEVAL_PUBLISH_EVENTS=true
+    ports:
+      - "5004:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
+
+  chat:
+    build: ./services/chat
+    container_name: chat-service
+    environment:
+      - SERVICE_NAME=chat-service
+      - SERVICE_PORT=5005
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
+      - ANSWERS_FILE=/data/answer_metadata.jsonl
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=openai/gpt-4o-mini
+      - RETRIEVAL_URL=http://retrieval:8000
+    ports:
+      - "5005:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      retrieval:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
+
+  monitoring:
+    build: ./services/monitoring
+    container_name: monitoring-service
+    environment:
+      - SERVICE_NAME=monitoring-service
+      - SERVICE_PORT=5006
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin}@rabbitmq:5672/
+      - DATA_ROOT=/data
+      - LOG_LEVEL=INFO
+    ports:
+      - "5006:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [marp_net]
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  marp_net:
+    driver: bridge

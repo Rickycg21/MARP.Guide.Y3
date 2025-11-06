@@ -1,0 +1,73 @@
+from common.config import settings
+import asyncio
+from fastapi import FastAPI, BackgroundTasks, HTTPException
+from common.events import consume
+from app.pipeline import handle_document, manual_index_document
+from uuid import uuid4
+from pathlib import Path
+from app.pipeline import collection
+from app.models import IndexResponse, IndexStats
+
+
+app = FastAPI(title="Indexing Service")
+
+@app.on_event("startup")
+async def startup_event():
+    """Startup event to begin consuming DocumentExtracted events."""
+    asyncio.create_task(consume("DocumentExtracted", handle_document))
+    print("Indexing Service started and listening for DocumentExtracted events.")
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint."""
+    return {"status": "ok"}
+
+@app.post("/index/{document_id}", status_code=202)
+async def index_document(document_id: str, background_tasks: BackgroundTasks):
+    """Allows manual re-indexing of a specific document via HTTP request."""    
+
+    # Construct the path to the document's text file (inside /data/text)
+    text_path = Path(settings.data_root) / "text" / f"{document_id}.txt"  
+    if not text_path.exists():
+        raise HTTPException(status_code=404, detail=f"Text file for document '{document_id}' not found at: {text_path}")
+    
+    correlation_id = f"manual-{uuid4()}"
+
+    # Schedule the re-indexing process to run in the background
+    background_tasks.add_task(manual_index_document, document_id, str(text_path), correlation_id)
+
+    return IndexResponse(
+        message=f"Indexing accepted for {document_id}",
+        correlationId=correlation_id
+    )
+
+@app.get("/index/stats")
+async def index_stats():
+    """
+    Retrieve index statistics (number of documents and chunks stored).
+    """
+    try:
+        # Get all entries in the collection safely
+        items = collection.get()  
+        metadatas = items.get("metadatas", []) or []
+
+        # Count total chunks and distinct documents
+        total_chunks = len(metadatas)
+        unique_docs = len(set(
+            m.get("document_id")
+            for m in metadatas
+            if m and "document_id" in m
+        ))
+
+        return IndexStats(
+            status="ok",
+            documentsIndexed=unique_docs,
+            chunksStored=total_chunks,
+            vectorDb="ChromaDB",
+            embeddingModel="all-MiniLM-L6-v2"
+        )
+
+    except Exception as e:
+        print(f"[Stats] Error getting stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve index stats: {e}")

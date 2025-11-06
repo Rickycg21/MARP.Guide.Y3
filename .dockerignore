@@ -1,0 +1,34 @@
+# Ignore version control and metadata
+.git
+.gitignore
+.DS_Store
+
+# Ignore Python cache and build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Ignore virtual environments
+.venv/
+env/
+venv/
+
+# Ignore local datasets and volumes
+data/
+**/data/
+*.db
+*.sqlite3
+
+# Ignore node modules (if any frontend code later)
+node_modules/
+
+# Ignore build outputs
+dist/
+build/
+*.egg-info/
+
+# Ignore IDE/project files
+.vscode/
+.idea/
