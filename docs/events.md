@@ -7,13 +7,13 @@ All events follow a shared JSON envelope format and are published to durable AMQ
 
 ## Event Catalogue
 
-| **Event Name** | **Published By** | **Consumed By** | **Purpose** | **Key Fields in `payload`** |
-|----------------|------------------|-----------------|--------------|---------------------------|
-| **DocumentDiscovered** | Ingestion Service | Extraction Service | Signals that a new MARP PDF has been discovered and downloaded. | `document_id`, `title`, `url`, `download_path`, `pages`, `discovered_at` |
-| **DocumentExtracted** | Extraction Service | Indexing Service | Confirms that text and metadata were successfully extracted from a PDF. | `document_id`, `text_path`, `page_count`, `token_count`, `metadata` |
-| **ChunksIndexed** | Indexing Service | Retrieval Service | Indicates that document chunks have been embedded and stored in the vector database. | `document_id`, `chunk_count`, `embedding_model`, `vector_db`, `index_path` |
-| **RetrievalCompleted** | Retrieval Service | Monitoring Service | Notifies that a search query was executed and top-k snippets were returned. | `query_id`, `query_text`, `results`, `top_k`, `retrieval_time_ms` |
-| **AnswerGenerated** | Chat Service | Monitoring Service | Announces that the Chat service generated an LLM-based answer for a user query. | `session_id`, `query_id`, `answer`, `citations`, `tokens_used`, `model`, `latency_ms` |
+| **Event Name**         | **Published By**   | **Consumed By**    | **Purpose**                                                                          | **Key Fields in `payload`**                                                           |
+| ---------------------- | ------------------ | ------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| **DocumentDiscovered** | Ingestion Service  | Extraction Service | Signals that a new MARP PDF has been discovered and downloaded.                      | `document_id`, `title`, `url`, `download_path`, `pages`, `discovered_at`              |
+| **DocumentExtracted**  | Extraction Service | Indexing Service   | Confirms that text and metadata were successfully extracted from a PDF.              | `document_id`, `text_path`, `page_count`, `token_count`, `metadata`                   |
+| **ChunksIndexed**      | Indexing Service   | Retrieval Service  | Indicates that document chunks have been embedded and stored in the vector database. | `document_id`, `chunk_count`, `embedding_model`, `vector_db`, `index_path`            |
+| **RetrievalCompleted** | Retrieval Service  | Monitoring Service | Notifies that a search query was executed and top-k snippets were returned.          | `query_id`, `query_text`, `results`, `top_k`, `retrieval_time_ms`                     |
+| **AnswerGenerated**    | Chat Service       | Monitoring Service | Announces that the Chat service generated an LLM-based answer for a user query.      | `session_id`, `query_id`, `answer`, `citations`, `tokens_used`, `model`, `latency_ms` |
 
 ---
 
@@ -29,14 +29,18 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
   "correlationId": "corr-id-xyz",
   "source": "service-name",
   "version": "1.0",
-  "payload": { /* event-specific fields */ }
+  "payload": {
+    /* event-specific fields */
+  }
 }
 ```
+
 ---
 
 ## Event Schemas
 
 ### 1. DocumentDiscovered
+
 ```json
 {
   "eventType": "DocumentDiscovered",
@@ -51,12 +55,13 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
     "url": "https://www.lancaster.ac.uk/.../Assessment_Regulations.pdf",
     "downloadPath": "/data/pdfs/Assessment_Regulations.pdf",
     "pages": 48,
-    "discoveredAt": "2025-10-21T10:15:00Z",
+    "discoveredAt": "2025-10-21T10:15:00Z"
   }
 }
 ```
 
 ### 2. DocumentExtracted
+
 ```json
 {
   "eventType": "DocumentExtracted",
@@ -74,11 +79,12 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
     "tokenCount": 12500,
     "extractedBy": "pdfplumber",
     "extractedAt": "2025-10-21T10:22:00Z"
-    }
   }
-
+}
 ```
+
 ### 3. ChunksIndexed
+
 ```json
 {
   "eventType": "ChunksIndexed",
@@ -97,7 +103,9 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
   }
 }
 ```
+
 ### 4. RetrievalCompleted
+
 ```json
 {
   "eventType": "RetrievalCompleted",
@@ -113,12 +121,20 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
     "topScore": 0.87,
     "latencyMs": 142,
     "results": [
-      { "docId": "marp-2025-policy-v3", "page": 12, "title": "Assessment Regulations 2025", "score": 0.87 }
+      {
+        "docId": "marp-2025-policy-v3",
+        "page": 12,
+        "title": "Assessment Regulations 2025",
+        "url": "https://example.edu/Assessment-Regs.pdf",
+        "score": 0.87
+      }
     ]
   }
 }
 ```
+
 ### 5. AnswerGenerated
+
 ```json
 {
   "eventType": "AnswerGenerated",
@@ -133,7 +149,11 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
     "answer": "According to the Assessment Regulations (page 12)…",
     "citationCount": 2,
     "citations": [
-      { "title": "Assessment Regulations 2025", "page": 12, "url": "https://..." },
+      {
+        "title": "Assessment Regulations 2025",
+        "page": 12,
+        "url": "https://..."
+      },
       { "title": "Exam Policy 2025", "page": 4, "url": "https://..." }
     ],
     "llmModel": "openrouter/gpt-4-mini",
@@ -142,9 +162,11 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
   }
 }
 ```
+
 ---
 
 ## Mermaid diagram
+
 ```mermaid
 flowchart TD
   I[Ingestion] -->|DocumentDiscovered| E[Extraction]
