@@ -8,10 +8,10 @@ This document describes our microservices, how they communicate (HTTP + events),
 
 | Service | Port | Responsibility | Key Endpoints / Queues |
 |---|---:|---|---|
-| **Ingestion** | **5001** | Discover & download MARP PDFs; publish new docs | `GET /health`, `POST /discover` → publishes **DocumentDiscovered** |
-| **Extraction** | **5002** | Convert PDFs → clean text per page; persist JSON | `GET /health`, (worker consumes **DocumentDiscovered**) → publishes **DocumentExtracted** |
-| **Indexing** | **5003** | Chunk text; create embeddings; store vectors | `GET /health`, (worker consumes **DocumentExtracted**) → publishes **ChunksIndexed** |
-| **Retrieval** | **5004** | Semantic search over vectors (and BM25 later) | `GET /health`, `GET /search?q=...&top_k=...` → publishes **RetrievalCompleted** |
+| **Ingestion** | **5001** | Discover & download MARP PDFs; publish new docs | `GET /health`, `POST /discover` -> publishes **DocumentDiscovered** |
+| **Extraction** | **5002** | Convert PDFs to clean text per page; persist JSON | `GET /health`, (worker consumes **DocumentDiscovered**) -> publishes **DocumentExtracted** |
+| **Indexing** | **5003** | Chunk text; create embeddings; store vectors | `GET /health`, (worker consumes **DocumentExtracted**) -> publishes **ChunksIndexed** |
+| **Retrieval** | **5004** | Semantic search over vectors (and BM25 later) | `GET /health`, `GET /search?q=...&top_k=...` -> publishes **RetrievalCompleted** |
 | **Chat (RAG)** | **5005** | Build prompt, call LLM, add citations | `GET /health`, `POST /chat` → publishes **AnswerGenerated** |
 | **Monitoring** (Tier-1) | **5006** | Show health & event counters | `GET /health`, `GET /metrics`, `/monitor` (UI) |
 | **RabbitMQ** | **5672 / 15672** | Event broker (AMQP); admin UI on 15672 | Queues: `DocumentDiscovered`, `DocumentExtracted`, `ChunksIndexed`, `RetrievalCompleted`, `AnswerGenerated` |
@@ -24,14 +24,14 @@ This document describes our microservices, how they communicate (HTTP + events),
 ## Communication Rules
 
 - **Synchronous (HTTP):**
-  - `UI → Chat` via `POST /chat`
-  - `Chat → Retrieval` via `GET /search`
+  - `UI -> Chat` via `POST /chat`
+  - `Chat -> Retrieval` via `GET /search`
 - **Asynchronous (Events via RabbitMQ):**
-  - `Ingestion → Extraction`: **DocumentDiscovered**
-  - `Extraction → Indexing`: **DocumentExtracted**
-  - `Indexing → Retrieval`: **ChunksIndexed**
-  - `Retrieval → (Monitoring)`: **RetrievalCompleted**
-  - `Chat → (Monitoring)`: **AnswerGenerated**
+  - `Ingestion -> Extraction`: **DocumentDiscovered**
+  - `Extraction -> Indexing`: **DocumentExtracted**
+  - `Indexing -> Retrieval`: **ChunksIndexed**
+  - `Retrieval -> (Monitoring)`: **RetrievalCompleted**
+  - `Chat -> (Monitoring)`: **AnswerGenerated**
 
 > No in-process calls; everything crosses a network boundary.
 
@@ -43,9 +43,13 @@ Events are JSON with a stable envelope:
 
 ```json
 {
-  "event_type": "EventName",
-  "timestamp": "ISO-8601",
-  "data": { "...payload..." }
+  "eventType": "EventName",
+  "eventId": "uuid-v4",
+  "timestamp": "2025-10-22T12:34:56Z",
+  "correlationId": "corr-id-xyz",
+  "source": "service-name",
+  "version": "1.0",
+  "payload": { /* event-specific fields */ }
 }
 ```
 
