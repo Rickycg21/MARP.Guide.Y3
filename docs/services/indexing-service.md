@@ -53,16 +53,16 @@ Automated tests validate the behavior and reliability of the Indexing Service en
 ### 🧪 Local Python Tests
 
 >bash
-# Navigate to the indexing service
+_Navigate to the indexing service_
 cd services/indexing
 
-# Run all test suites
+_Run all test suites_
 pytest -v
 
-# Run a specific test file
+_Run a specific test file_
 pytest tests/test_endpoints.py -v
 
-# Clean previous test cache
+_Clean previous test cache_
 pytest --cache-clear
 
 ### Dependencies
