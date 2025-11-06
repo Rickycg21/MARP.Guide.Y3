@@ -1,16 +1,19 @@
 # =============================================================================
-# Purpose: FastAPI endpoints + event publishing + JSONL query logging.
-# Notes:
-#   - /search: standard retrieval endpoint
-#   - /health: service health
-#   - /dev/consumeChunksIndexed: DEV-only endpoint that simulates "indexer
-#     emitted ChunksIndexed" → run retrieval → optionally publish RetrievalCompleted.
+# File: main.py
+# Purpose:
+#   FastAPI surface for the retrieval service.
+#
+# Responsibilities:
+#   - Expose /search (semantic retrieval) and /health.
+#   - Publish RetrievalCompleted events (when enabled).
+#   - Append compact telemetry lines to /data/query_metadata.jsonl.
 # =============================================================================
 
 import os, uuid, json, time, logging, datetime as dt
 from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
 
-from fastapi import FastAPI, Query, HTTPException, Body
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
@@ -27,20 +30,49 @@ logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.I
 PUBLISH_EVENTS = os.getenv("RETRIEVAL_PUBLISH_EVENTS", "false").lower() == "true"
 EVENT_EXCHANGE = os.getenv("EVENT_EXCHANGE", "events")
 SERVICE_NAME = os.getenv("SERVICE_NAME", "retrieval-service")
-_publish = None
+_publish = None 
 
 # -----------------------------------------------------------------------------
 # Event publishing
 # -----------------------------------------------------------------------------
+@dataclass
+class _RetrievalResult:
+    docId: str
+    page: Optional[int]
+    title: Optional[str]
+    url: Optional[str]
+    score: Optional[float]
+@dataclass
+class _RetrievalPayload:
+    queryId: str
+    query: str
+    resultsCount: int
+    topScore: Optional[float]
+    latencyMs: int
+    results: List[_RetrievalResult]
+@dataclass
+class _RetrievalCompletedEvent:
+    eventType: str
+    eventId: str
+    timestamp: str
+    correlationId: str
+    source: str
+    version: str
+    payload: _RetrievalPayload
+
 async def publish_retrieval_completed(
     correlation_id: Optional[str],
     query_id: str,
     query_text: str,
-    mode: str,
-    top_k: int,
+    mode: str,         
+    top_k: int,         
     duration_ms: int,
     results: List[dict],
 ) -> None:
+    """
+    Publish a RetrievalCompleted event with a minimal payload that downstream
+    consumers (chat, monitoring) can rely on. 
+    """
     if not PUBLISH_EVENTS:
         return
 
@@ -50,46 +82,48 @@ async def publish_retrieval_completed(
             from common import events as ev
             _publish = getattr(ev, "publish_event_async", None) or getattr(ev, "publish_event", None)
         if _publish is None:
-            log.warning("No publish function found; skipping event.")
+            log.warning("No publish function found, skipping event.")
             return
 
         # Compute top score if present
-        top_score = None
+        top_score: Optional[float] = None
         for r in results or []:
             s = (r.get("scores") or {}).get("combined")
             if s is not None:
                 top_score = s if top_score is None else max(top_score, s)
 
-        # Map results to the required minimal shape (now includes url)
-        payload_results = []
+        # Map results
+        payload_results: List[_RetrievalResult] = []
         for r in results or []:
-            payload_results.append({
-                "docId": r.get("document_id"),
-                "page": r.get("page"),
-                "title": r.get("title"),
-                "url": r.get("url"),
-                "score": (r.get("scores") or {}).get("combined"),
-            })
+            payload_results.append(
+                _RetrievalResult(
+                    docId=r.get("document_id"),
+                    page=r.get("page"),
+                    title=r.get("title"),
+                    url=r.get("url"),
+                    score=(r.get("scores") or {}).get("combined"),
+                )
+            )
 
-        envelope = {
-            "eventType": "RetrievalCompleted",
-            "eventId": str(uuid.uuid4()),
-            "timestamp": dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-            "correlationId": correlation_id or str(uuid.uuid4()),
-            "source": SERVICE_NAME,
-            "version": "1.0",
-            "payload": {
-                "queryId": query_id,
-                "query": query_text,
-                "resultsCount": len(payload_results),
-                "topScore": top_score,
-                "latencyMs": int(duration_ms or 0),
-                "results": payload_results,
-            },
-        }
+        event = _RetrievalCompletedEvent(
+            eventType="RetrievalCompleted",
+            eventId=str(uuid.uuid4()),
+            timestamp=dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+            correlationId=correlation_id or str(uuid.uuid4()),
+            source=SERVICE_NAME,
+            version="1.0",
+            payload=_RetrievalPayload(
+                queryId=query_id,
+                query=query_text,
+                resultsCount=len(payload_results),
+                topScore=top_score,
+                latencyMs=int(duration_ms or 0),
+                results=payload_results,
+            ),
+        )
 
-        maybe = _publish(envelope, exchange=EVENT_EXCHANGE)
-        if hasattr(maybe, "__await__"):
+        maybe = _publish(event)
+        if hasattr(maybe, "__await__"):  # supports async or sync implementations
             await maybe
 
     except Exception as e:
@@ -115,7 +149,9 @@ async def startup():
 # -----------------------------------------------------------------------------
 @app.get("/health")
 async def health() -> JSONResponse:
-    """Service health summary (Chroma + embedder)."""
+    """
+    Health check summarizing Chroma connectivity and declared embedding model.
+    """
     assert retriever
     h = await retriever.health()
     return JSONResponse(HealthResponse(
@@ -132,7 +168,11 @@ async def search(
     documentId: Optional[str] = Query(None, description="Restrict to a single document"),
     correlationId: Optional[str] = Query(None, description="Trace id for events/logs"),
 ) -> JSONResponse:
-    """Run retrieval and return normalized results. Optionally publish an event."""
+    """
+    Run retrieval and return normalized results.
+    - Publishes RetrievalCompleted.
+    - Logs a compact line to /data/query_metadata.jsonl.
+    """
     assert retriever
     try:
         t0 = time.monotonic_ns()
@@ -144,7 +184,7 @@ async def search(
         log.exception("search failed: %s", e)
         raise HTTPException(500, "Search failed")
 
-    # Shape rows -> response models
+    # Shape rows -> response models (keeps field aliases for API)
     results = [SearchResult(
         document_id=r.get("document_id","unknown"),
         page=r.get("page"),
@@ -177,65 +217,8 @@ async def search(
 
     return JSONResponse(resp.model_dump(by_alias=True))
 
-# ---- ChunksIndexed manual trigger -----------------------------
-# Simulates indexer -> ChunksIndexed event: runs retrieval and (optionally) publishes.
-@app.post("/dev/consumeChunksIndexed")
-async def dev_consume_chunks_indexed(event: Dict[str, Any] = Body(...)) -> JSONResponse:
-    """DEV-only entrypoint to mimic the event-driven path locally."""
-    assert retriever
-    payload = (event or {}).get("payload") or {}
-    q = payload.get("query")
-    if not q:
-        raise HTTPException(400, "payload.query is required")
-
-    t0 = time.monotonic_ns()
-    rows, _stats = await retriever.search(
-        q=q,
-        top_k=int(payload.get("topK", 5)),
-        mode=payload.get("mode", "semantic"),
-        document_id=payload.get("documentId"),
-    )
-    elapsed_ms = int((time.monotonic_ns() - t0) / 1e6)
-
-    results = [SearchResult(
-        document_id=r.get("document_id","unknown"),
-        page=r.get("page"),
-        title=r.get("title"),
-        url=r.get("url"),
-        snippet=r.get("snippet"),
-        scores=Scores(**(r.get("scores") or {})),
-    ) for r in rows]
-
-    query_id = str(uuid.uuid4())
-    resp = SearchResponse(
-        query_id=query_id, query=q,
-        top_k=int(payload.get("topK",5)),
-        mode=payload.get("mode","semantic"),
-        duration_ms=elapsed_ms,
-        results=results,
-    )
-
-    await publish_retrieval_completed(
-        correlation_id=(event or {}).get("correlationId"),
-        query_id=query_id, query_text=q,
-        mode=payload.get("mode","semantic"),
-        top_k=int(payload.get("topK",5)),
-        duration_ms=elapsed_ms,
-        results=rows,
-    )
-
-    _log_query_jsonl(
-        query_id=query_id,
-        query_text=q,
-        mode=payload.get("mode","semantic"),
-        top_k=int(payload.get("topK",5)),
-        retrieval_time_ms=elapsed_ms,
-        results=results,
-    )
-    return JSONResponse(resp.model_dump(by_alias=True))
-
 # -----------------------------------------------------------------------------
-# Helpers
+# Compact JSONL log for telemetry/debugging
 # -----------------------------------------------------------------------------
 def _log_query_jsonl(
     query_id: str,
@@ -245,18 +228,22 @@ def _log_query_jsonl(
     retrieval_time_ms: int,
     results: List[SearchResult],
 ) -> None:
-    """Append a compact JSONL line for quick debugging/telemetry."""
+    """
+    Append a compact JSONL line for quick debugging/telemetry at /data/query_metadata.jsonl.
+    """
     try:
-        out_results = []
+        out_results: List[Dict[str, Any]] = []
         for r in results:
             out_results.append({
                 "document_id": r.document_id,
                 "page": r.page,
                 "title": r.title,
                 "url": r.url,
-                "score": (r.scores.combined
-                          if r.scores and r.scores.combined is not None
-                          else r.scores.semantic if r.scores else None),
+                "score": (
+                    r.scores.combined
+                    if r.scores and r.scores.combined is not None
+                    else (r.scores.semantic if r.scores else None)
+                ),
             })
 
         line = {
@@ -271,6 +258,8 @@ def _log_query_jsonl(
             f.write(json.dumps(line, ensure_ascii=False) + "\n")
     except Exception:
         log.exception("failed to append /data/query_metadata.jsonl")
+
+# -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import uvicorn
