@@ -323,8 +323,29 @@ async def _retrieve(
     result_summaries: List[Dict[str, Any]] = []
     # Normalise the retrieval payload into RetrievedChunk models and collect a
     # lightweight summary for downstream metadata/event payloads.
+    # Be tolerant to upstream field naming.
+
+    def _pick_str(d: Dict[str, Any], keys: List[str]) -> str:
+        for k in keys:
+            v = d.get(k)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        return ""
+
+    def _pick_int(d: Dict[str, Any], keys: List[str]) -> Optional[int]:
+        for k in keys:
+            v = d.get(k)
+            if v is None:
+                continue
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                continue
+        return None
+
     for raw in results:
-        snippet = (raw.get("snippet") or "").strip()
+        # Prefer 'snippet' but support common alternatives from prototype services
+        snippet = _pick_str(raw, ["snippet", "text", "content", "chunk", "passage"])
         if not snippet:
             logger.debug("Skipping retrieval hit without snippet: %s", raw)
             continue
@@ -341,9 +362,9 @@ async def _retrieve(
         try:
             chunk = RetrievedChunk(
                 text=snippet,
-                title=raw.get("title"),
-                page=raw.get("page"),
-                url=raw.get("url"),
+                title=_pick_str(raw, ["title", "documentTitle", "docTitle", "sourceTitle"]) or None,
+                page=_pick_int(raw, ["page", "pageNumber", "page_index"]),
+                url=_pick_str(raw, ["url", "link", "sourceUrl", "source_url"]) or None,
                 score=score_val,
             )
         except Exception as exc:
