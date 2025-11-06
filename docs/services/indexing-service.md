@@ -50,9 +50,10 @@ Automated tests validate the behavior and reliability of the Indexing Service en
 | **Manual Indexing** | `POST /index/{document_id}` | Simulates a manual re-indexing operation for an existing document. Verifies that the text file is found, embeddings are generated, and a `ChunksIndexed` event is produced. | Returns `202 Accepted` with a `correlationId`. |
 | **Index Statistics** | `GET /index/stats` | Retrieves real-time statistics from ChromaDB, counting indexed documents and total chunks stored. | Returns `200 OK` with JSON summary of index statistics. |
 
-### 🧪 Local Python Tests
+### Local Python Tests using pytest
 
 >bash
+
 _Navigate to the indexing service_
 cd services/indexing
 
