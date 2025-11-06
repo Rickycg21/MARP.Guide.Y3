@@ -108,15 +108,13 @@ Internet access for MARP PDFs and OpenRouter API
 ---
 
 ### Trigger End-to-End Pipeline
-"curl -X POST http://localhost:5001/discover" for MacOS or
-"curl.exe -X POST http://localhost:5001/discover" for Windows systems
+"curl -X POST http://localhost:5001/discover"
 to discover MARP PDFs & publish DocumentDiscovered event to Extraction.  
 Extraction and Indexing process run asynchronously via RabbitMQ events.  
 
-! - In case of running the program for a consecutive time run:
-"docker compose up -d chat --force-recreate"
 
-"Invoke-RestMethod -Method Post -Uri "http://localhost:5005/chat" -ContentType "application/json" -Body (@{question="(Place your question in-between the quotation marks)"; top_k=3} | ConvertTo-Json)" to ask a question.  
+Command: curl -X POST 'http://localhost:5005/chat' -H 'Content-Type: application/json' --data '{"question":"(Place your question in-between the quotation marks)","top_k":3}'
+to ask a question.  
 Chat calls Retrieval & returns an answer with ≥ 1 citation.  
 
 "docker compose logs -f ingestion extraction indexing retrieval chat" to view service logs.  
