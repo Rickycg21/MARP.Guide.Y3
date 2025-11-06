@@ -79,8 +79,10 @@ Follow these steps to build and run the MARP-Guide Chatbot locally using Docker 
 ---
 
 ### Prerequisites
-Docker Desktop (or Docker Engine + Compose) installed  
-Internet access for MARP PDFs and OpenRouter API  
+Before running the MARP-Guide Chatbot system, ensure the following are installed on your machine:
+- **Docker Desktop** (or Docker Engine + Docker Compose)
+- **Internet connection** (required to download MARP PDFs and use the OpenRouter API)
+- **OpenRouter API key** (for the Chat service) 
 
 ---
 
