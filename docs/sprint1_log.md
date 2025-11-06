@@ -26,33 +26,33 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 ### ✅ Completed Items (Sprint 1)
 | Epic | ID | Task | Responsible | Status | Notes |
 |------|----|-------|--------------|---------|-------|
-| **Ingestion** | ING-1 | Discover MARP PDF URLs | - | ✅ | Automatic discovery from university site implemented |
-|  | ING-2 | Download PDFs and store metadata | - | ✅ | PDFs saved under `/data/text/` |
-|  | ING-3 | Publish `DocumentDiscovered` event | - | ✅ | Event schema created and tested |
+| **Ingestion** | ING-1 | Discover MARP PDF URLs | Youssef, Dominik | ✅ | Automatic discovery from university site implemented |
+|  | ING-2 | Download PDFs and store metadata | Youssef, Dominik | ✅ | PDFs saved under `/data/text/` |
+|  | ING-3 | Publish `DocumentDiscovered` event | Youssef | ✅ | Event schema created and tested |
 |  | TEST-ING | Unit tests for ingestion workflow | - | 🔜 | Basic endpoint and event tests added (pytest) |
-| **Extraction** | EXT-1 | Parse PDFs into clean text | - | ✅ | Implemented using pdfplumber |
-|  | EXT-2 | Store extracted text as JSON | - | ✅ | JSON output ready for Indexing |
-|  | EXT-3 | Publish `DocumentExtracted` event | - | ✅ | Event triggers Indexing workflow |
+| **Extraction** | EXT-1 | Parse PDFs into clean text | Youssef, Ricardo | ✅ | Implemented using pdfplumber |
+|  | EXT-2 | Store extracted text as JSON | Youssef, Ricardo | ✅ | JSON output ready for Indexing |
+|  | EXT-3 | Publish `DocumentExtracted` event | Youssef, Ricardo | ✅ | Event triggers Indexing workflow |
 |  | TEST-EXT | Unit tests for extraction logic | - | 🔜 | Verified text parsing and event emission |
 | **Indexing** | IDX-1 | Implement chunking strategy | Diego | ✅ | Custom chunking (~450 tokens, 50 overlap) |
 |  | IDX-2 | Generate embeddings | Diego | ✅ | Using `sentence-transformers` model |
 |  | IDX-3 | Store embeddings in ChromaDB | Diego | ✅ | Embedded vectors saved with metadata |
 |  | IDX-4 | Publish `ChunksIndexed` event | Diego | ✅ | Triggers Retrieval service |
 |  | TEST-IDX | Unit tests for chunking & embedding pipeline | Diego | 🔄 | Coverage for pipeline flow and endpoints |
-| **Retrieval** | RET-1 | Implement `/search` endpoint | - | ✅ | Returns top-k chunks with metadata |
-|  | RET-2 | Include page number + title + URL | - | ✅ | Ensures full citation data |
-|  | RET-3 | Publish `RetrievalCompleted` event | - | ✅ | Forwarded to Monitoring service |
+| **Retrieval** | RET-1 | Implement `/search` endpoint | Ricardo | ✅ | Returns top-k chunks with metadata |
+|  | RET-2 | Include page number + title + URL | Ricardo | ✅ | Ensures full citation data |
+|  | RET-3 | Publish `RetrievalCompleted` event | Ricardo | ✅ | Forwarded to Monitoring service |
 |  | TEST-RET | Unit tests for retrieval API | - | 🔜 | Verified ranking logic and response formatting |
-| **RAG Chat** | RAG-1 | Implement `/chat` endpoint | - | ✅ | Integrated OpenRouter API |
-|  | RAG-2 | Prompt engineering | - | ✅ | Ensures citation format |
-|  | RAG-3 | Generate answers with ≥1 citation | - | ✅ | Basic RAG pipeline functional |
-|  | RAG-5 | Publish `AnswerGenerated` event | - | ✅ | Final event completes workflow |
+| **RAG Chat** | RAG-1 | Implement `/chat` endpoint | Dominik | ✅ | Integrated OpenRouter API |
+|  | RAG-2 | Prompt engineering | Dominik | ✅ | Ensures citation format |
+|  | RAG-3 | Generate answers with ≥1 citation | Dominik | ✅ | Basic RAG pipeline functional |
+|  | RAG-5 | Publish `AnswerGenerated` event | Dominik | ✅ | Final event completes workflow |
 |  | TEST-RAG | Unit tests for RAG response builder | - | 🔜 | Covered prompt assembly and LLM call simulation |
 | **Infrastructure** | INF-1 | Docker Compose setup | Diego, Youssef | ✅ | Verified multi-service startup |
-|  | INF-2 | RabbitMQ integration | - | ✅ | Fully connected via AMQP |
+|  | INF-2 | RabbitMQ integration | Youssef | ✅ | Fully connected via AMQP |
 |  | INF-5a | Service documentation under `/docs/services` | All | ✅ | Includes architecture, services descriptions |
 |  | INF-5b | Project documentation under `/docs` | Youssef, Diego | ✅ | Contains Scrum artefacts, markdown deliverables |
-|  | TEST-INF | Basic service health & container tests | Diego | ✅ | Smoke tests confirm all services reachable |
+|  | TEST-INF | Basic service health & container tests | All | ✅ | Smoke tests confirm all services reachable |
 
 
 ---
@@ -94,6 +94,7 @@ Unit tests initiated for each component; full automation and CI integration sche
 
 _Last updated: November 2025_  
 _Team: MARP.Guide.Y3 — Diego Laforet Fernández, Ricardo Coll González, Dominik Turowski, Youssef Bahaa._
+
 
 
 
