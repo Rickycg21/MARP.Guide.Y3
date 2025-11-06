@@ -189,7 +189,7 @@ Open RabbitMQ’s web UI at "http://localhost:15672" to view live event publicat
 
 "curl http://localhost:5004/health" to check health.  
 
-"curl -s "http://localhost:5004/search?q=late%20submission&topK=5&mode=semantic" | jq" to run a search. Example: "late submission" 
+"GET /search?q=...&top_k=..." to run a search. (Example: "curl -s "http://localhost:5004/search?q=late%20submission&topK=5&mode=semantic" | jq")
 
 "docker compose down" to stop running containers.   
 
