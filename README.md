@@ -149,7 +149,7 @@ Open RabbitMQ’s web UI at "http://localhost:15672" to view live event publicat
 
 "docker compose logs -f extraction" to view Extraction logs.  
 
-"curl http://localhost:5001/health" to check health.  
+"curl http://localhost:5002/health" to check health.  
 
 "curl -X POST http://localhost:5002/extract/<document_id>" to trigger text extraction from a specific document.  
 
@@ -179,6 +179,19 @@ Open RabbitMQ’s web UI at "http://localhost:15672" to view live event publicat
 "pytest -v tests/test_endpoints.py" to run endpoint tests.  
 
 "pytest -v tests/test_index_local.py" to run local manual indexing test (simulates full local indexing process). 
+
+---
+
+### Tests for Retrieval service
+"docker compose up --build rabbitmq retrieval" to build & start Retrieval.  
+
+"docker compose logs -f retrieval" to view Retrieval logs.  
+
+"curl http://localhost:5004/health" to check health.  
+
+"curl -s "http://localhost:5004/search?q=late%20submission&topK=5&mode=semantic" | jq" to run a search. Example: "late submission" 
+
+"docker compose down" to stop running containers.   
 
 ---
 
