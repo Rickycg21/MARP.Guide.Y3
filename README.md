@@ -112,6 +112,7 @@ Internet access for MARP PDFs and OpenRouter API
 to discover MARP PDFs & publish DocumentDiscovered event to Extraction.  
 Extraction and Indexing process run asynchronously via RabbitMQ events.  
 
+Set the model API Key with: $env:OPENROUTER_API_KEY = "(place your key between the quotation marks)"
 
 Command: curl -X POST 'http://localhost:5005/chat' -H 'Content-Type: application/json' --data '{"question":"(Place your question in-between the quotation marks)","top_k":3}'
 to ask a question.  
