@@ -41,7 +41,7 @@ The Indexing Service divides extracted MARP document text into semantically cohe
 | **Average chunk volume per document** | *100–250 chunks* for MARP PDFs (40–80 pages) | Provides manageable vector counts (~40k vectors for full MARP corpus) for efficient retrieval latency within ChromaDB. |
 
 
-#### Test Coverage
+## Test Coverage
 Automated tests validate the behavior and reliability of the Indexing Service endpoints and their integration with the local vector store (ChromaDB).
 
 | Test | Endpoint / Component | Purpose | Expected Result |
@@ -50,7 +50,32 @@ Automated tests validate the behavior and reliability of the Indexing Service en
 | **Manual Indexing** | `POST /index/{document_id}` | Simulates a manual re-indexing operation for an existing document. Verifies that the text file is found, embeddings are generated, and a `ChunksIndexed` event is produced. | Returns `202 Accepted` with a `correlationId`. |
 | **Index Statistics** | `GET /index/stats` | Retrieves real-time statistics from ChromaDB, counting indexed documents and total chunks stored. | Returns `200 OK` with JSON summary of index statistics. |
 
-#### Implementation Notes
+#### Local Python Tests using pytest
+
+>bash
+
+_Navigate to the indexing service_
+cd services/indexing
+
+_Run all test suites_
+pytest -v
+
+_Run a specific test file_
+pytest tests/test_endpoints.py -v
+
+_Clean previous test cache_
+pytest --cache-clear
+
+## Dependencies
+
+- **Python 3.13+**
+- **FastAPI** — REST API framework  
+- **ChromaDB** — Local vector database  
+- **SentenceTransformers (all-MiniLM-L6-v2)** — Embedding model  
+- **RabbitMQ** — Event broker  
+- **pytest** — Automated testing
+
+## Implementation Notes
 
 - Tests are located in tests/test_endpoints.py and executed using pytest and FastAPI TestClient.
 
