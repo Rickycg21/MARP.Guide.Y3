@@ -158,6 +158,27 @@ Open RabbitMQ’s web UI at "http://localhost:15672" to view live event publicat
 
 ---
 
+### Tests for Indexing service  
+"docker compose up --build rabbitmq indexing" to build & start Indexing.  
+
+"docker compose logs -f indexing" to view Indexing logs.  
+
+"curl http://localhost:5003/health" to check health.  
+
+"curl -X POST http://localhost:5003/index/<document_id>" to trigger manual re-indexing for a specific document.  
+
+"curl http://localhost:5003/index/stats" to view index statistics (documents and chunks stored).  
+
+"docker compose down" to stop running containers.
+
+_Local tests for functions_
+
+"pytest -v tests/test_endpoints.py" to run endpoint tests.  
+
+"pytest -v tests/test_index_local.py" to run local manual indexing test (simulates full local indexing process). 
+
+---
+
 ## 🧠 Technology Stack Overview
 
 Our MARP-Guide RAG Chatbot is a **Python-based microservices system**.
