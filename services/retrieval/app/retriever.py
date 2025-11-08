@@ -47,10 +47,6 @@ class Retriever:
 
         # Create/get the persistent collection.
         self._pc = chromadb.PersistentClient(path=self.chroma_dir)
-        self._coll = self._pc.get_or_create_collection(
-            self.collection, metadata={"hnsw:space": "cosine"}
-        )
-        self._pc = chromadb.PersistentClient(path=self.chroma_dir)
         ef = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name=self.embed_model
         )
@@ -60,6 +56,7 @@ class Retriever:
             embedding_function=ef
         )
         
+    
 
     # ---------------------------------------------------------------------
     # Health
@@ -97,7 +94,7 @@ class Retriever:
         # Optional per-document filter.
         where = {"document_id": document_id} if document_id else None
 
-        # Use the same embedding model as indexing on query_texts.
+        # Use the same embedding model as indexing on query.
         t0 = time.time()
         raw = self._coll.query(
             query_texts=[q],
