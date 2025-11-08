@@ -4,3 +4,6 @@ aio-pika>=9,<10
 chromadb>=0.4.24,<0.6
 numpy>=1.26,<2.2
 httpx>=0.25,<0.28
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch>=2.7,<2.8
+sentence-transformers>=2.2,<3

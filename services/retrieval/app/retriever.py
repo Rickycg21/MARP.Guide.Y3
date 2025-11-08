@@ -14,6 +14,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import chromadb
+from chromadb.utils import embedding_functions
 
 log = logging.getLogger(__name__)
 
@@ -49,6 +50,16 @@ class Retriever:
         self._coll = self._pc.get_or_create_collection(
             self.collection, metadata={"hnsw:space": "cosine"}
         )
+        self._pc = chromadb.PersistentClient(path=self.chroma_dir)
+        ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=self.embed_model
+        )
+        self._coll = self._pc.get_or_create_collection(
+            self.collection,
+            metadata={"hnsw:space": "cosine"},
+            embedding_function=ef
+        )
+        
 
     # ---------------------------------------------------------------------
     # Health
@@ -86,7 +97,7 @@ class Retriever:
         # Optional per-document filter.
         where = {"document_id": document_id} if document_id else None
 
-        # Use Chroma's built-in embedding generation for query_texts.
+        # Use the same embedding model as indexing on query_texts.
         t0 = time.time()
         raw = self._coll.query(
             query_texts=[q],
