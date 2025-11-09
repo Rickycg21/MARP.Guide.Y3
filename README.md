@@ -87,8 +87,9 @@ Before running the MARP-Guide Chatbot system, ensure the following are installed
 ---
 
 ### Clone Repository
-"git clone https://github.com/Rickycg21/MARP.Guide.Y3.gitmarp-guide.git"  
-"cd Rickycg21/MARP.Guide.Y3.gitmarp-guide"  
+git clone https://github.com/Rickycg21/MARP.Guide.Y3.gitmarp-guide.git  
+
+cd MARP.Guide.Y3  
 
 ---
 
@@ -126,8 +127,12 @@ All data is stored under /data/ (volume mounted by Docker).
 
 Open RabbitMQ’s web UI at "http://localhost:15672" to view live event publication.  
 
+---
+
 ### Stop
 "docker compose down" to stop all running containers.  
+
+---
 
 ### Tests for Ingestion service
 "docker compose up --build rabbitmq ingestion" to build & start Ingestion.
