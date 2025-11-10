@@ -101,7 +101,7 @@ except ValueError:
     _cit_limit_env = 1
 # 1 citation limit controls how many retrieval snippets
 # are forwarded to gpt. Increase it later
-CITATION_LIMIT = max(1, _cit_limit_env)
+CITATION_LIMIT = max(2, _cit_limit_env)
 
 # --- Data locations ----------------------------------------------------------
 DATA_DIR = settings.data_root
@@ -206,7 +206,7 @@ async def _llm_answer(question: str, context_blocks: List[RetrievedChunk]) -> Di
     system_prompt = (
         "You are a MARP assistant answering questions for students and staff. "
         "Use only the supplied context snippets. "
-        "Cite exactly one source as [1] in your answer. "
+        "“Provide up to two sentences and cite sources as [1] and [2]. If only one source is relevant, still include [1]."
         'If the context is insufficient, reply with "I\'m not certain. Source: not available."'
     )
 
@@ -232,7 +232,7 @@ async def _llm_answer(question: str, context_blocks: List[RetrievedChunk]) -> Di
         ],
     }
 
-    async with httpx.AsyncClient(timeout=60) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
             f"{OPENROUTER_BASE}/chat/completions", headers=headers, json=payload
         )
@@ -308,7 +308,7 @@ async def _retrieve(
     if correlation_id:
         params["correlationId"] = correlation_id
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         response = await client.get(url, params=params)
         if response.status_code >= 400:
             logger.error("Retrieval error %s: %s", response.status_code, response.text)
