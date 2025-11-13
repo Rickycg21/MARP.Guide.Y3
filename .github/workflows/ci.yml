@@ -46,16 +46,11 @@ jobs:
           sudo rm -rf /usr/local/lib/python3.11/site-packages/*torch*
           sudo rm -rf /usr/local/lib/python3.11/site-packages/triton*
 
-          # Global pip site-packages just in case
-          sudo rm -rf /usr/local/lib/python3.11/site-packages/torch*
-          sudo rm -rf /usr/local/lib/python3.11/site-packages/triton*
-
           # Remove pip cache 
           rm -rf ~/.cache/pip
 
-          # Clean Docker storage: overlay layers + containers
-          sudo rm -rf /var/lib/docker/overlay2/*
-          sudo rm -rf /var/lib/docker/containers/*
+          # Clear Docker container logs
+          sudo find /var/lib/docker/containers -type f -name "*.log" -delete
 
           # Remove unused docker images/layers
           docker system prune -af || true
