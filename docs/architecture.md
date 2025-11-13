@@ -27,9 +27,9 @@ This document describes our microservices, how they communicate (HTTP + events),
   - `UI -> Chat` via `POST /chat`
   - `Chat -> Retrieval` via `GET /search`
 - **Asynchronous (Events via RabbitMQ):**
-  - `Ingestion -> Extraction`: **DocumentDiscovered**
-  - `Extraction -> Indexing`: **DocumentExtracted**
-  - `Indexing -> Retrieval`: **ChunksIndexed**
+  - `Ingestion -> Extraction & (Monitoring)`: **DocumentDiscovered**
+  - `Extraction -> Indexing & (Monitoring)`: **DocumentExtracted**
+  - `Indexing -> (Monitoring)`: **ChunksIndexed**
   - `Retrieval -> (Monitoring)`: **RetrievalCompleted**
   - `Chat -> (Monitoring)`: **AnswerGenerated**
 
@@ -72,15 +72,17 @@ flowchart LR
     M[Monitoring :5006]
   end
 
-  subgraph Infra
+  subgraph Infrastructure
     Q[(RabbitMQ 5672/15672)]
     V[(Vector DB)]
   end
 
   %% Pipeline edges
   I -->|"DocumentDiscovered (event)"| E
+  I -->|"DocumentDiscovered (event)"| M
   E -->|"DocumentExtracted (event)"| X
-  X -->|"ChunksIndexed (event)"| R
+  E -->|"DocumentExtracted (event)"| M
+  X -->|"ChunksIndexed (event)"| M
   C <-->|"HTTP /search"| R
   U -->|"HTTP POST /chat"| C
   C -->|"AnswerGenerated (event)"| M
