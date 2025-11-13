@@ -4,7 +4,16 @@
 ---
 
 ## Tier 1 Choice:
-Basic Monitoring Dashboard
+Basic Monitoring Dashboard:
+
+The Monitoring Service is a standalone microservice that passively listens to all events emitted by the pipeline.  
+It maintains lightweight operational metrics including:  
+Per-event counts (documents discovered, extracted, indexed; queries run; answers generated)  
+Average latency for retrieval and chat events  
+Service health inferred from event heartbeats (based on event source field)  
+A simple HTML dashboard for demonstration  
+Monitoring communicates only via AMQP (RabbitMQ) and does not call any REST endpoint.  
+It does not block or interfere with the pipeline — it is fully decoupled and purely observational.  
 
 ## Tier 2 Choice:
 Hybrid Search
@@ -26,7 +35,7 @@ Answers are retrieved from MARP PDF documents, properly cited (title + page + li
 | **Indexing** | 5003 | Chunk text & create embeddings | `ChunksIndexed` | `DocumentExtracted` |
 | **Retrieval** | 5004 | Semantic search over vectors | `RetrievalCompleted` | `ChunksIndexed` |
 | **Chat (RAG)** | 5005 | Generate answers with citations | `AnswerGenerated` | – |
-| **Monitoring** | 5006 | Aggregate metrics & health | – | `RetrievalCompleted`, `AnswerGenerated` |
+| **Monitoring** | 5006 | Aggregate metrics & health | – | All events |
 
 ---
 
