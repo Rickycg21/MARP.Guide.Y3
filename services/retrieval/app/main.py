@@ -164,7 +164,7 @@ async def health() -> JSONResponse:
 async def search(
     q: str = Query(..., min_length=1, description="User query text"),
     topK: int = Query(5, ge=1, le=int(os.getenv("MAX_TOPK", "50")), description="Number of results"),
-    mode: str = Query("semantic", pattern="^(semantic|bm25|hybrid)$"),
+    mode: str = Query("hybrid", pattern="^(semantic|bm25|hybrid)$"),
     documentId: Optional[str] = Query(None, description="Restrict to a single document"),
     correlationId: Optional[str] = Query(None, description="Trace id for events/logs"),
 ) -> JSONResponse:
@@ -174,6 +174,13 @@ async def search(
     - Logs a compact line to /data/query_metadata.jsonl.
     """
     assert retriever
+
+    if mode == "bm25":
+        raise HTTPException(
+            status_code=400,
+            detail="bm25-only mode is not implemented yet; use 'semantic' or 'hybrid'.",
+        )
+
     try:
         t0 = time.monotonic_ns()
         rows, _stats = await retriever.search(q=q, top_k=topK, mode=mode, document_id=documentId)

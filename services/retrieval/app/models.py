@@ -11,7 +11,10 @@
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
-# Supported retrieval modes. We keep "bm25" and "hybrid" for future expansion.
+# Supported retrieval modes.
+# - "semantic": vector-only retrieval via Chroma
+# - "bm25": lexical-only retrieval (not yet implemented)
+# - "hybrid": semantic + bm25 with a fused combined score
 Mode = Literal["semantic", "bm25", "hybrid"]
 
 
@@ -20,9 +23,13 @@ class Scores(BaseModel):
     Per-result scoring container.
 
     All values are optional and clamped to [0,1] where applicable.
+
+    In semantic-only mode, typically only `semantic` and `combined` are set.
+    In hybrid mode, both `semantic` and `bm25` may be populated, and `combined`
+    represents the fused score used for ranking.
     """
     semantic: Optional[float] = Field(None, ge=0, le=1)
-    bm25: Optional[float]     = Field(None, ge=0, le=1)
+    bm25: Optional[float] = Field(None, ge=0, le=1)
     combined: Optional[float] = Field(None, ge=0, le=1)
 
     # Ensure alias names are respected when serializing.
@@ -38,7 +45,7 @@ class SearchResult(BaseModel):
     document_id: str = Field(..., alias="documentId")
     page: Optional[int] = None
     title: Optional[str] = None
-    url:   Optional[str] = None
+    url: Optional[str] = None
     snippet: Optional[str] = None
     scores: Scores
 
@@ -53,9 +60,9 @@ class SearchResponse(BaseModel):
     duration is measured server-side for rough latency telemetry.
     """
     query_id: str = Field(..., alias="queryId")
-    query:    str
-    top_k:    int = Field(..., alias="topK", ge=1, le=50)
-    mode:     Mode
+    query: str
+    top_k: int = Field(..., alias="topK", ge=1, le=50)
+    mode: Mode
     duration_ms: int = Field(..., alias="durationMs", ge=0)
     results: List[SearchResult]
 
