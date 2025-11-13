@@ -26,6 +26,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PWD/services/indexing" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: |
           cd services/indexing
