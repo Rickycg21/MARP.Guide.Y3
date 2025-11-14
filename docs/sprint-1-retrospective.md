@@ -42,7 +42,7 @@ The full core architecture is functional and all mandatory events are implemente
 ## SMART actions (TO DO)
 
 | Action | Owner | Deadline | Succes |
-|-------------------|-------------|-----------|--------------------|
+|-------------------|----------|-----------|--------------------|
 | **Implement aditional features(Tier 1 and 2)** | Youssef and Ricardo | | Satisfies assesment description |
 | **Implement CI pipeline** | Diego | | Develop at least 10–15 unit and integration tests across services. Integrate with GitHub Actions.|
 | **Implement Chat UI** | Dominik | | Working chat UI with 90% citation accuracy |
