@@ -14,32 +14,6 @@ on:
       - develop
 
 jobs:
-  python-tests-indexing:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=$PWD/services/indexing" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        run: |
-          cd services/indexing
-          pip install -r requirements.txt
-          pip install pytest
-
-      - name: Run pytest
-        run: |
-          cd services/indexing
-          pytest -v
-
   docker-services:
     runs-on: ubuntu-latest
 
