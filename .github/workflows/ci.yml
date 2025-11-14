@@ -61,6 +61,10 @@ jobs:
           # Remove Ubuntu caches
           sudo apt-get clean
           sudo apt-get autoclean
+   
+      #Check disk space after cleanup
+      - name: Check disk space before build
+        run: df -h
 
       #Prune Docker to free up space before building images
       - name: Pre-build prune
