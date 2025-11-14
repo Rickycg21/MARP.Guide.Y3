@@ -32,7 +32,7 @@ The full core architecture is functional and all mandatory events are implemente
 
 ## What didn´t go well
 
-| Category | Issues Encountered |
+| Category | Notes |
 |-----------|-------------------|
 | **Testing Coverage** | Unit and integration testing were postponed to Sprint 2 to prioritize functionality. |
 | **Monitoring Dashboard** | Metrics and visual dashboards were partially implemented, requiring further refinement. |
