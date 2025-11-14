@@ -6,7 +6,7 @@ The sprint focused on building the **Core RAG Pipeline** — delivering a workin
 
 ---
 
-## Sprint Recap
+## Sprint recap
 **Sprint Goal:**  
 > Deliver a functional, containerized RAG pipeline capable of producing answers with at least one citation,  
 > fully integrated across microservices using HTTP and RabbitMQ.
@@ -30,7 +30,7 @@ The full core architecture is functional and all mandatory events are implemente
 
 ---
 
-## Issues
+## What didn´t go well
 
 | Category | Issues Encountered |
 |-----------|-------------------|
@@ -40,7 +40,7 @@ The full core architecture is functional and all mandatory events are implemente
 
 ---
 
-## To do Next Sprint
+## To do next sprint
 
 | Improvement Area | Action Plan |
 |-------------------|-------------|
@@ -51,10 +51,12 @@ The full core architecture is functional and all mandatory events are implemente
 | **Continuous Integration** | Ensure `docker compose up` and tests run automatically after each push. |
 
 ---
+## SMART actions (TO DO)
 
+---
 ## Summary
 
-- **Sprint Success:** ✅ Core RAG pipeline delivered and integrated.  
+- **Sprint Success:** Core RAG pipeline delivered and integrated.  
 - **Pending Tasks:** Testing, CI/CD setup, Monitoring dashboard (Sprint 2).  
 - **Team Work:** High — confident for Sprint 2 delivery and good communication between members.  
 

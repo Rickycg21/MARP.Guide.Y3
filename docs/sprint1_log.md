@@ -10,7 +10,7 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 
 | Sprint | Duration | Sprint Goal | Status |
 |--------|------------|--------------|---------|
-| **Sprint 1** | Week 1 → Week 5 | Deliver a fully functional **RAG pipeline** connecting ingestion → extraction → indexing → retrieval → chat, with working events and Docker deployment. | ✅ Completed |
+| **Sprint 1** | Week 1 → Week 5 | Deliver a fully functional **RAG pipeline** connecting ingestion → extraction → indexing → retrieval → chat, with working events and Docker deployment. | Completed |
 
 ---
 
