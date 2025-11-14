@@ -126,6 +126,11 @@ jobs:
           docker compose logs
           exit 1
 
+      #Check disk space after build
+      - name: Check disk space after build
+        run: df -h
+
+
       #Stop and remove the Docker containers after tests are done
       - name: Stop Docker services
         if: always()
