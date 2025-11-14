@@ -1,4 +1,4 @@
-# 🧾 MARP-Guide Chatbot — Product Backlog
+# MARP-Guide Chatbot — Product Backlog
 
 This backlog lists all planned features, user stories, and technical tasks for the MARP-Guide system.  
 It is structured by epics (Ingestion, Extraction, Indexing, Retrieval, RAG Chat, Monitoring, Infrastructure).  
@@ -6,14 +6,14 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-## 🏁 Product Goal
+## Product Goal
 > Build a chat application that can accurately answer questions about Lancaster University’s MARP (Manual of Academic Regulations and Procedures) using a Retrieval-Augmented Generation (RAG) pipeline — with correct citations (title, page, and link).
 
 ---
 
 ## 📦 Epics & Stories
 
-### 🧩 EPIC 1 — Ingestion Service
+### EPIC 1 — Ingestion Service
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | ING-1 | Discover MARP PDF URLs | Automatically discover all MARP-related PDFs from the official Lancaster website. | High | ✅ Done |
@@ -24,7 +24,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-### 📄 EPIC 2 — Extraction Service
+### EPIC 2 — Extraction Service
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | EXT-1 | Parse PDFs to text | Convert PDFs into clean, per-page text using PyPDF2/pdfplumber. | High | ✅ Done |
@@ -35,7 +35,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-### 🧠 EPIC 3 — Indexing Service
+### EPIC 3 — Indexing Service
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | IDX-1 | Implement chunking strategy | Split extracted text into semantic chunks (~450 tokens, 50 overlap). | High | ✅ Done |
@@ -47,7 +47,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-### 🔍 EPIC 4 — Retrieval Service
+### EPIC 4 — Retrieval Service
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | RET-1 | Implement `/search` endpoint | Return top-k relevant chunks given a query embedding. | High | ✅ Done |
@@ -58,7 +58,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-### 💬 EPIC 5 — RAG Chat Service
+### EPIC 5 — RAG Chat Service
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | RAG-1 | Implement `/chat` endpoint | Accept a query and build the RAG pipeline response. | High | ✅ Done |
@@ -70,7 +70,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-### 📊 EPIC 6 — Monitoring (Tier 1 Feature)
+### EPIC 6 — Monitoring (Tier 1 Feature)
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | MON-1 | Health checks dashboard | Display `/health` status of all services. | High | ✅ Done |
@@ -80,7 +80,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-### ⚙️ EPIC 7 — Infrastructure & CI/CD
+### EPIC 7 — Infrastructure & CI/CD
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | INF-1 | Docker Compose setup | All services start and connect via `docker compose up`. | High | ✅ Done |
@@ -93,7 +93,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-### 🧭 EPIC 8 — UX & Chat Interface (Tier 2 Feature)
+### EPIC 8 — UX & Chat Interface (Tier 2 Feature)
 | ID | User Story / Task | Description | Priority | Status |
 |----|-------------------|--------------|-----------|---------|
 | UX-1 | Build chat UI (React) | Simple interface for sending questions and showing answers + citations. | High | 🔜 Planned |
@@ -102,7 +102,7 @@ Each item includes a short description, priority, and current status.
 
 ---
 
-## 🧩 Definition of Done
+## Definition of Done
 - Code implemented, reviewed, and merged into `develop` branch.  
 - Service runs in Docker Compose with health check passing.  
 - Events published and consumed successfully.  
