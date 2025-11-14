@@ -39,19 +39,14 @@ The full core architecture is functional and all mandatory events are implemente
 | **CI/CD Setup** | GitHub Actions pipeline not yet completed — test automation still manual. |
 
 ---
-
-## To do next sprint
-
-| Improvement Area | Action Plan |
-|-------------------|-------------|
-| **Testing Automation** | Develop at least 10–15 unit and integration tests across services. Integrate with GitHub Actions. |
-| **Monitoring & Metrics** | Finalize `/metrics` endpoint and event counter dashboard for Assessment 2. |
-| **UI Development** | Begin work on the Chat Frontend (Tier 2 feature). |
-| **Hybrid Search Feature** | Implement BM25 + dense retrieval fusion for higher precision in answers. |
-| **Continuous Integration** | Ensure `docker compose up` and tests run automatically after each push. |
-
----
 ## SMART actions (TO DO)
+
+| Action | Owner | Deadline | Succes |
+|-------------------|-------------|-----------|--------------------|
+| **Implement aditional features(Tier 1 and 2)** | Youssef and Ricardo | | Satisfies assesment description |
+| **Implement CI pipeline** | Diego | | Develop at least 10–15 unit and integration tests across services. Integrate with GitHub Actions.|
+| **Implement Chat UI** | Dominik | | Working chat UI with 90% citation accuracy |
+
 
 ---
 ## Summary
