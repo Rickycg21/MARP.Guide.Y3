@@ -66,6 +66,11 @@ jobs:
       - name: Check disk space before build
         run: df -h
 
+      #Check Docker disk usage before building images
+      - name: Docker disk usage
+        run: docker system df
+
+
       #Prune Docker to free up space before building images
       - name: Pre-build prune
         run: docker system prune -af || true
