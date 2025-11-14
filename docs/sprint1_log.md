@@ -1,4 +1,4 @@
-# 🗓️ MARP-Guide Chatbot — Sprint Log
+# MARP-Guide Chatbot — Sprint Log
 
 This document records the sprint planning, progress, and outcomes for the MARP-Guide project.  
 It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the assessment:  
@@ -6,7 +6,7 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 
 ---
 
-## 🧭 Sprint Overview
+## Sprint Overview
 
 | Sprint | Duration | Sprint Goal | Status |
 |--------|------------|--------------|---------|
@@ -14,16 +14,16 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 
 ---
 
-## 🎯 Sprint Goal
+## Sprint Goal
 
 > Implement the end-to-end data flow from MARP document ingestion to generating an answer with one citation using the RAG architecture.  
 > All core services must run in Docker Compose and communicate asynchronously through RabbitMQ.
 
 ---
 
-## 📅 Sprint Backlog
+## Sprint Backlog
 
-### ✅ Completed Items (Sprint 1)
+### Completed Items (Sprint 1)
 | Epic | ID | Task | Responsible | Status | Notes |
 |------|----|-------|--------------|---------|-------|
 | **Ingestion** | ING-1 | Discover MARP PDF URLs | Youssef, Dominik | ✅ | Automatic discovery from university site implemented |
@@ -57,7 +57,7 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 
 ---
 
-### 🔄 In Progress / Carry-Over (to Sprint 2)
+### In Progress / Carry-Over (to Sprint 2)
 | Epic | ID | Task | Responsible | Status | Notes |
 |------|----|-------|--------------|---------|-------|
 | **Monitoring** | MON-2 | Event counter metrics | - | 🔜 | Planned for Assessment 2 |
@@ -70,7 +70,7 @@ It focuses on **Sprint 1 (Weeks 1–5)** — the first increment required by the
 
 ---
 
-## 📈 Sprint Progress Summary
+## Sprint Progress Summary
 
 - **Total planned items:** 33  
 - **Completed:** 26 ✅  
@@ -83,7 +83,7 @@ Unit tests initiated for each component; full automation and CI integration sche
 
 ---
 
-## 💬 Review Summary
+## Review Summary
 
 - All core services communicate via network interfaces (HTTP + RabbitMQ).  
 - Events (`DocumentDiscovered`, `DocumentExtracted`, `ChunksIndexed`, `RetrievalCompleted`, `AnswerGenerated`) validated end-to-end.  

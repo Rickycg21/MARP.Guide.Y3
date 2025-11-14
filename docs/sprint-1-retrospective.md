@@ -1,23 +1,23 @@
 
-# 🔁 MARP-Guide Chatbot — Sprint 1 Retrospective
+# MARP-Guide Chatbot — Sprint 1 Retrospective
 
 This document summarizes the team’s reflection after completing **Sprint 1 (Weeks 1–5)** for the MARP-Guide project.  
 The sprint focused on building the **Core RAG Pipeline** — delivering a working end-to-end system (Ingestion → Extraction → Indexing → Retrieval → Chat) with event-driven communication and Dockerized deployment.
 
 ---
 
-## 🧭 Sprint Recap
+## Sprint Recap
 **Sprint Goal:**  
 > Deliver a functional, containerized RAG pipeline capable of producing answers with at least one citation,  
 > fully integrated across microservices using HTTP and RabbitMQ.
 
 **Sprint Outcome:**  
-✅ Achieved.  
+Achieved.  
 The full core architecture is functional and all mandatory events are implemented and exchanged successfully between services.  
 
 ---
 
-## ✅ Well done
+## What went well
 
 | Category | Notes |
 |-----------|-------|
@@ -30,7 +30,7 @@ The full core architecture is functional and all mandatory events are implemente
 
 ---
 
-## ⚠️ Issues
+## Issues
 
 | Category | Issues Encountered |
 |-----------|-------------------|
@@ -40,7 +40,7 @@ The full core architecture is functional and all mandatory events are implemente
 
 ---
 
-## 🚀 To do Next Sprint
+## To do Next Sprint
 
 | Improvement Area | Action Plan |
 |-------------------|-------------|
@@ -52,7 +52,7 @@ The full core architecture is functional and all mandatory events are implemente
 
 ---
 
-## 🏁 Summary
+## Summary
 
 - **Sprint Success:** ✅ Core RAG pipeline delivered and integrated.  
 - **Pending Tasks:** Testing, CI/CD setup, Monitoring dashboard (Sprint 2).  
