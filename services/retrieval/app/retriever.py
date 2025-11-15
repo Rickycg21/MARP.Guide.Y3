@@ -4,7 +4,7 @@
 #
 # Responsibilities:
 #   - Open a persistent Chroma collection.
-#   - Run semantic search via Chroma's built-in embedding.
+#   - Run hybrid search.
 #   - Normalize results into a stable, minimal dict shape consumed by the API.
 # =============================================================================
 
@@ -14,7 +14,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import chromadb
-from rank_bm25 import BM25Okapi  # for lexical BM25 scoring
+from rank_bm25 import BM25Okapi
 
 log = logging.getLogger(__name__)
 
@@ -68,21 +68,80 @@ class Retriever:
 
     async def health(self) -> Dict[str, Any]:
         """
-        Return minimal health info for Chroma.
+        Return extended health info for the retrieval service, covering:
+        - Chroma collection reachability
+        - Embedding model configuration and basic embedding test
+        - BM25 / hybrid pipeline readiness (tokenisation + small query)
         """
+        status = "ok"
         chroma_ok = True
+
+        # --- Check 1: Chroma connectivity
         try:
             _ = self._coll.count()
         except Exception as e:
             chroma_ok = False
             log.exception("chroma count failed: %s", e)
+            status = "down"
 
-        status = "ok" if chroma_ok else "down"
-        return {
-            "status": status,
-            "chromaDir": self.chroma_dir,
-            "embedding": {"reachable": chroma_ok, "model": self.embed_model},
+        # --- Embedding model info
+        embedding_info = {
+            "reachable": chroma_ok,
+            "model": self.embed_model
         }
+
+        # -- Check 2: Embedding basic query test
+        embed_ok = False
+        if chroma_ok:
+            try:
+                # Use a fixed test query to verify embedding and retrieval returns results
+                test_query = "health check"
+                raw = self._coll.query(
+                    query_texts=[test_query],
+                    n_results=1,
+                    include=["documents"],
+                )
+                # If we got at least one document, consider embedding path OK
+                if raw.get("documents", [[]])[0]:
+                    embed_ok = True
+                else:
+                    log.warning("health: embedding test returned no documents")
+            except Exception as e:
+                log.exception("health: embedding test failed: %s", e)
+
+        if not embed_ok:
+            # degrade but keep chroma_ok state
+            status = "degraded" if status != "down" else "down"
+
+        # -- Check 3: BM25/hybrid pipeline basic test
+        bm25_ok = False
+        if chroma_ok:
+            try:
+                # small artificial corpus test snippet
+                docs = ["this is a test snippet for retrieval health"]
+                tokenised = [self._tokenize(d) for d in docs]
+                bm25 = BM25Okapi(tokenised)
+                scores = bm25.get_scores(self._tokenize("test snippet"))
+                if len(scores) == len(docs):
+                    bm25_ok = True
+                else:
+                    log.warning("health: bm25 scoring returned unexpected length")
+            except Exception as e:
+                log.exception("health: bm25 pipeline failed: %s", e)
+
+        if not bm25_ok:
+            status = "degraded" if status != "down" else "down"
+
+        # -- Final status logic
+        final_status = status
+
+        return {
+            "status": final_status,
+            "chromaDir": self.chroma_dir,
+            "embedding": embedding_info,
+            "bm25_pipeline": {"ready": bm25_ok},
+        }
+
 
     # ---------------------------------------------------------------------
     # Search
@@ -90,7 +149,7 @@ class Retriever:
     @staticmethod
     def _tokenize(text: str) -> List[str]:
         """
-        Very lightweight tokenizer used for BM25.
+        Tokenizer used for BM25.
 
         For our purposes we just:
           - lowercase
@@ -108,16 +167,15 @@ class Retriever:
         document_id: Optional[str] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
-        Execute a semantic (or hybrid) query using Chroma's internal embedding
-        and normalize results.
+        Execute a hybrid query and normalize results.
 
         In "semantic" mode, ranking is based purely on cosine similarity.
 
         In "hybrid" mode, we:
-          - use Chroma to get a semantic candidate set (N > top_k),
+          - semantically choose candidates set (N > top_k),
           - score those candidates with BM25 over their snippets,
           - fuse semantic and BM25 into a combined score in [0,1],
-          - and rank by the combined score.
+          - rank by the combined score.
         """
         if not q or not q.strip():
             raise ValueError("Empty query")
@@ -126,8 +184,6 @@ class Retriever:
         where = {"document_id": document_id} if document_id else None
 
         # Decide how many semantic candidates to pull from Chroma.
-        # For pure semantic mode, top_k is fine.
-        # For hybrid, we ask for a larger candidate pool to give BM25 room to re-rank.
         if mode == "hybrid":
             candidate_k = max(top_k * 5, top_k)
         else:
@@ -150,7 +206,7 @@ class Retriever:
         if not docs:
             return [], {"duration_ms": duration_ms}
 
-        # ---- semantic scoring: distance (cosine) -> similarity in [0,1]
+        # ---- Semantic scoring: distance (cosine) -> similarity in [0,1]
         # Chroma returns cosine distance roughly in [0,2].
         # Similarity mapping: sim = 1 - (dist / 2), clamped to [0,1].
         semantic_sims: List[Optional[float]] = []
@@ -172,6 +228,7 @@ class Retriever:
                 rows.append(
                     {
                         "document_id": md.get("document_id") or "unknown",
+                        "chunk_id": md.get("chunk_id"),
                         "page": md.get("page"),
                         "title": md.get("title"),
                         "url": md.get("url"),
@@ -187,7 +244,7 @@ class Retriever:
         # For any other mode that we don't explicitly support, log and fall back to semantic.
         if mode not in ("hybrid",):
             log.warning("Unknown mode=%s requested; falling back to semantic", mode)
-            mode = "hybrid"  # but we could also choose to behave as semantic
+            mode = "hybrid"
 
         # ---------------------------------------------------------------------
         # Hybrid mode: BM25 rerank of semantic candidates.
@@ -197,7 +254,7 @@ class Retriever:
         # We only use this corpus for this query.
         tokenized_docs: List[List[str]] = [self._tokenize(doc) for doc in docs]
         try:
-            bm25 = BM25Okapi(tokenized_docs)  # type: ignore[arg-type]
+            bm25 = BM25Okapi(tokenized_docs)
             query_tokens = self._tokenize(q)
             bm25_scores_raw = bm25.get_scores(query_tokens)
         except Exception as e:
@@ -210,6 +267,7 @@ class Retriever:
                 rows.append(
                     {
                         "document_id": md.get("document_id") or "unknown",
+                        "chunk_id": md.get("chunk_id"),
                         "page": md.get("page"),
                         "title": md.get("title"),
                         "url": md.get("url"),
@@ -230,7 +288,6 @@ class Retriever:
 
         def _norm_bm25(x: float) -> float:
             if max_bm == min_bm:
-                # All scores equal (or no scores); treat BM25 as neutral (0.0).
                 return 0.0
             return (x - min_bm) / (max_bm - min_bm)
 
@@ -251,6 +308,7 @@ class Retriever:
             rows.append(
                 {
                     "document_id": md.get("document_id") or "unknown",
+                    "chunk_id": md.get("chunk_id"),
                     "page": md.get("page"),
                     "title": md.get("title"),
                     "url": md.get("url"),

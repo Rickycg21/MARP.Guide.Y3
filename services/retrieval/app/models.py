@@ -10,6 +10,7 @@
 
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
+from dataclasses import dataclass
 
 # Supported retrieval modes.
 # - "semantic": vector-only retrieval via Chroma
@@ -43,6 +44,7 @@ class SearchResult(BaseModel):
     The minimal metadata we currently expose per hit.
     """
     document_id: str = Field(..., alias="documentId")
+    chunk_id: Optional[str] = Field(None, alias="chunkId")
     page: Optional[int] = None
     title: Optional[str] = None
     url: Optional[str] = None
@@ -69,6 +71,47 @@ class SearchResponse(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+@dataclass
+class RetrievalResult:
+    """
+    Represents a single retrieval hit in the event payload.
+    """
+    docId: str
+    chunkId: Optional[str]
+    page: Optional[int]
+    title: Optional[str]
+    url: Optional[str]
+    score: Optional[float]
+    scores: Optional[Dict[str, Optional[float]]]
+
+
+@dataclass
+class RetrievalPayload:
+    """
+    Encapsulates the retrieval results for a single query.
+    """
+    queryId: str
+    query: str
+    resultsCount: int
+    topScore: Optional[float]
+    latencyMs: int
+    results: List[RetrievalResult]
+
+
+@dataclass
+class RetrievalCompletedEvent:
+    """
+    Event message signalling retrieval is complete.
+    """
+    eventType: str
+    eventId: str
+    timestamp: str
+    correlationId: str
+    source: str
+    version: str
+    payload: RetrievalPayload
+
+
 class HealthResponse(BaseModel):
     """
     Health summary used by /health.
@@ -76,5 +119,6 @@ class HealthResponse(BaseModel):
     status: Literal["ok", "degraded", "down"]
     chroma_dir: Optional[str] = Field(None, alias="chromaDir")
     embedding: Dict[str, Any]
+    bm25_pipeline: Optional[Dict[str, bool]] = Field(None, alias="bm25_pipeline")
 
     model_config = {"populate_by_name": True}
