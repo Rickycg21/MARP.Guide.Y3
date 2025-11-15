@@ -1,5 +1,4 @@
 # MARP-Guide Chatbot — Events
-
 This document defines the event types used across the MARP-Guide RAG pipeline and explains how they connect the microservices through RabbitMQ.  
 All events follow a shared JSON envelope format and are published to durable AMQP queues.
 
@@ -18,7 +17,6 @@ All events follow a shared JSON envelope format and are published to durable AMQ
 ---
 
 ## Common Event Envelope (v1)
-
 All MARP-Guide events follow a **standard envelope** for traceability, versioning, and monitoring.
 
 ```json
@@ -40,7 +38,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ## Event Schemas
 
 ### 1. DocumentDiscovered
-
 ```json
 {
   "eventType": "DocumentDiscovered",
@@ -61,7 +58,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 2. DocumentExtracted
-
 ```json
 {
   "eventType": "DocumentExtracted",
@@ -84,7 +80,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 3. ChunksIndexed
-
 ```json
 {
   "eventType": "ChunksIndexed",
@@ -105,7 +100,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 4. RetrievalCompleted
-
 ```json
 {
   "eventType": "RetrievalCompleted",
@@ -140,7 +134,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```
 
 ### 5. AnswerGenerated
-
 ```json
 {
   "eventType": "AnswerGenerated",
@@ -172,7 +165,6 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ---
 
 ## Mermaid diagram
-
 ```mermaid
 flowchart TD
   I[Ingestion] -->|DocumentDiscovered| E[Extraction]
