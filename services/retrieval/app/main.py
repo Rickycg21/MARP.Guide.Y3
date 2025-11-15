@@ -4,21 +4,21 @@
 #   FastAPI surface for the retrieval service.
 #
 # Responsibilities:
-#   - Expose /search (semantic retrieval) and /health.
-#   - Publish RetrievalCompleted events (when enabled).
+#   - Expose /search and /health.
+#   - Publish RetrievalCompleted events.
 #   - Append compact telemetry lines to /data/query_metadata.jsonl.
 # =============================================================================
 
 import os, uuid, json, time, logging, datetime as dt
 from typing import Any, Dict, List, Optional
-from dataclasses import dataclass
 
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from app.retriever import Retriever
-from app.models import HealthResponse, SearchResponse, SearchResult, Scores
+from app.models import HealthResponse, SearchResponse, SearchResult, Scores, RetrievalResult, RetrievalPayload, RetrievalCompletedEvent
+
 from common.config import settings
 
 # -----------------------------------------------------------------------------
@@ -35,30 +35,6 @@ _publish = None
 # -----------------------------------------------------------------------------
 # Event publishing
 # -----------------------------------------------------------------------------
-@dataclass
-class _RetrievalResult:
-    docId: str
-    page: Optional[int]
-    title: Optional[str]
-    url: Optional[str]
-    score: Optional[float]
-@dataclass
-class _RetrievalPayload:
-    queryId: str
-    query: str
-    resultsCount: int
-    topScore: Optional[float]
-    latencyMs: int
-    results: List[_RetrievalResult]
-@dataclass
-class _RetrievalCompletedEvent:
-    eventType: str
-    eventId: str
-    timestamp: str
-    correlationId: str
-    source: str
-    version: str
-    payload: _RetrievalPayload
 
 async def publish_retrieval_completed(
     correlation_id: Optional[str],
@@ -71,7 +47,7 @@ async def publish_retrieval_completed(
 ) -> None:
     """
     Publish a RetrievalCompleted event with a minimal payload that downstream
-    consumers (chat, monitoring) can rely on. 
+    consumers can rely on. 
     """
     if not PUBLISH_EVENTS:
         return
@@ -85,7 +61,7 @@ async def publish_retrieval_completed(
             log.warning("No publish function found, skipping event.")
             return
 
-        # Compute top score if present
+        # Compute top score if present.
         top_score: Optional[float] = None
         for r in results or []:
             s = (r.get("scores") or {}).get("combined")
@@ -93,26 +69,33 @@ async def publish_retrieval_completed(
                 top_score = s if top_score is None else max(top_score, s)
 
         # Map results
-        payload_results: List[_RetrievalResult] = []
+        payload_results: List[RetrievalResult] = []
         for r in results or []:
+            scores_dict = (r.get("scores") or {})  # semantic/bm25/combined from retriever
             payload_results.append(
-                _RetrievalResult(
+                RetrievalResult(
                     docId=r.get("document_id"),
+                    chunkId=r.get("chunk_id"),
                     page=r.get("page"),
                     title=r.get("title"),
                     url=r.get("url"),
-                    score=(r.get("scores") or {}).get("combined"),
+                    score=scores_dict.get("combined"), # Top Score
+                    scores={                           # Full score breakdown.
+                        "semantic": scores_dict.get("semantic"),
+                        "bm25": scores_dict.get("bm25"),
+                        "combined": scores_dict.get("combined"),
+                    },
                 )
             )
 
-        event = _RetrievalCompletedEvent(
+        event = RetrievalCompletedEvent(
             eventType="RetrievalCompleted",
             eventId=str(uuid.uuid4()),
             timestamp=dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
             correlationId=correlation_id or str(uuid.uuid4()),
             source=SERVICE_NAME,
             version="1.0",
-            payload=_RetrievalPayload(
+            payload=RetrievalPayload(
                 queryId=query_id,
                 query=query_text,
                 resultsCount=len(payload_results),
@@ -150,21 +133,25 @@ async def startup():
 @app.get("/health")
 async def health() -> JSONResponse:
     """
-    Health check summarizing Chroma connectivity and declared embedding model.
+    Health check summarizing:
+    - Chroma connectivity.
+    - Basic embedding test.
+    - BM25 / hybrid pipeline readiness
     """
     assert retriever
     h = await retriever.health()
     return JSONResponse(HealthResponse(
         status=h.get("status","down"),
         chroma_dir=h.get("chromaDir"),
-        embedding=h.get("embedding", {"reachable": False, "model": None})
+        embedding=h.get("embedding", {"reachable": False, "model": None}),
+        bm25_pipeline=h.get("bm25_pipeline")
     ).model_dump(by_alias=True))
 
 @app.get("/search")
 async def search(
     q: str = Query(..., min_length=1, description="User query text"),
     topK: int = Query(5, ge=1, le=int(os.getenv("MAX_TOPK", "50")), description="Number of results"),
-    mode: str = Query("semantic", pattern="^(semantic|bm25|hybrid)$"),
+    mode: str = Query("hybrid", pattern="^(semantic|bm25|hybrid)$"),
     documentId: Optional[str] = Query(None, description="Restrict to a single document"),
     correlationId: Optional[str] = Query(None, description="Trace id for events/logs"),
 ) -> JSONResponse:
@@ -174,6 +161,13 @@ async def search(
     - Logs a compact line to /data/query_metadata.jsonl.
     """
     assert retriever
+
+    if mode == "bm25":
+        raise HTTPException(
+            status_code=400,
+            detail="BM25 alone mode is not implemented, use 'semantic' or 'hybrid'.",
+        )
+
     try:
         t0 = time.monotonic_ns()
         rows, _stats = await retriever.search(q=q, top_k=topK, mode=mode, document_id=documentId)
@@ -187,6 +181,7 @@ async def search(
     # Shape rows -> response models (keeps field aliases for API)
     results = [SearchResult(
         document_id=r.get("document_id","unknown"),
+        chunk_id=r.get("chunk_id"),
         page=r.get("page"),
         title=r.get("title"),
         url=r.get("url"),
@@ -236,14 +231,15 @@ def _log_query_jsonl(
         for r in results:
             out_results.append({
                 "document_id": r.document_id,
+                "chunk_id": r.chunk_id,
                 "page": r.page,
                 "title": r.title,
                 "url": r.url,
-                "score": (
-                    r.scores.combined
-                    if r.scores and r.scores.combined is not None
-                    else (r.scores.semantic if r.scores else None)
-                ),
+                "scores": {
+                    "semantic": r.scores.semantic if r.scores else None,
+                    "bm25": r.scores.bm25 if r.scores else None,
+                    "combined": r.scores.combined if r.scores else None,
+                },
             })
 
         line = {
