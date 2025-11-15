@@ -13,7 +13,7 @@ This document describes our microservices, how they communicate (HTTP + events),
 | **Indexing** | **5003** | Chunk text; create embeddings; store vectors | `GET /health`, (worker consumes **DocumentExtracted**) -> publishes **ChunksIndexed** |
 | **Retrieval** | **5004** | Semantic search over vectors (and BM25 later) | `GET /health`, `GET /search?q=...&top_k=...` -> publishes **RetrievalCompleted** |
 | **Chat (RAG)** | **5005** | Build prompt, call LLM, add citations | `GET /health`, `POST /chat` → publishes **AnswerGenerated** |
-| **Monitoring** (Tier-1) | **5006** | Show health & event counters | `GET /health`, `GET /metrics`, `/monitor` (UI) |
+| **Monitoring** (Tier-1) | **5006** | Show health, event counters, average latency | `GET /health`, `GET /metrics`, `/monitor` (UI) |
 | **RabbitMQ** | **5672 / 15672** | Event broker (AMQP); admin UI on 15672 | Queues: `DocumentDiscovered`, `DocumentExtracted`, `ChunksIndexed`, `RetrievalCompleted`, `AnswerGenerated` |
 | **Vector DB** | *(internal)* | Store embeddings + metadata | ChromaDB |
 
@@ -27,9 +27,9 @@ This document describes our microservices, how they communicate (HTTP + events),
   - `UI -> Chat` via `POST /chat`
   - `Chat -> Retrieval` via `GET /search`
 - **Asynchronous (Events via RabbitMQ):**
-  - `Ingestion -> Extraction`: **DocumentDiscovered**
-  - `Extraction -> Indexing`: **DocumentExtracted**
-  - `Indexing -> Retrieval`: **ChunksIndexed**
+  - `Ingestion -> Extraction & (Monitoring)`: **DocumentDiscovered**
+  - `Extraction -> Indexing & (Monitoring)`: **DocumentExtracted**
+  - `Indexing -> (Monitoring)`: **ChunksIndexed**
   - `Retrieval -> (Monitoring)`: **RetrievalCompleted**
   - `Chat -> (Monitoring)`: **AnswerGenerated**
 
@@ -72,15 +72,17 @@ flowchart LR
     M[Monitoring :5006]
   end
 
-  subgraph Infra
+  subgraph Infrastructure
     Q[(RabbitMQ 5672/15672)]
     V[(Vector DB)]
   end
 
   %% Pipeline edges
   I -->|"DocumentDiscovered (event)"| E
+  I -->|"DocumentDiscovered (event)"| M
   E -->|"DocumentExtracted (event)"| X
-  X -->|"ChunksIndexed (event)"| R
+  E -->|"DocumentExtracted (event)"| M
+  X -->|"ChunksIndexed (event)"| M
   C <-->|"HTTP /search"| R
   U -->|"HTTP POST /chat"| C
   C -->|"AnswerGenerated (event)"| M

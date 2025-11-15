@@ -9,9 +9,9 @@ All events follow a shared JSON envelope format and are published to durable AMQ
 
 | **Event Name**         | **Published By**   | **Consumed By**    | **Purpose**                                                                          | **Key Fields in `payload`**                                                           |
 | ---------------------- | ------------------ | ------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| **DocumentDiscovered** | Ingestion Service  | Extraction Service | Signals that a new MARP PDF has been discovered and downloaded.                      | `document_id`, `title`, `url`, `download_path`, `pages`, `discovered_at`              |
-| **DocumentExtracted**  | Extraction Service | Indexing Service   | Confirms that text and metadata were successfully extracted from a PDF.              | `document_id`, `text_path`, `page_count`, `token_count`, `metadata`                   |
-| **ChunksIndexed**      | Indexing Service   | Retrieval Service  | Indicates that document chunks have been embedded and stored in the vector database. | `document_id`, `chunk_count`, `embedding_model`, `vector_db`, `index_path`            |
+| **DocumentDiscovered** | Ingestion Service  | Extraction & Monitoring Services | Signals that a new MARP PDF has been discovered and downloaded.                      | `document_id`, `title`, `url`, `download_path`, `pages`, `discovered_at`              |
+| **DocumentExtracted**  | Extraction Service | Indexing & Monitoring Services   | Confirms that text and metadata were successfully extracted from a PDF.              | `document_id`, `text_path`, `page_count`, `token_count`, `metadata`                   |
+| **ChunksIndexed**      | Indexing Service   | Monitoring Service  | Indicates that document chunks have been embedded and stored in the vector database. | `document_id`, `chunk_count`, `embedding_model`, `vector_db`, `index_path`            |
 | **RetrievalCompleted** | Retrieval Service  | Monitoring Service | Notifies that a search query was executed and top-k snippets were returned.          | `query_id`, `query_text`, `results`, `top_k`, `retrieval_time_ms`                     |
 | **AnswerGenerated**    | Chat Service       | Monitoring Service | Announces that the Chat service generated an LLM-based answer for a user query.      | `session_id`, `query_id`, `answer`, `citations`, `tokens_used`, `model`, `latency_ms` |
 
@@ -176,8 +176,10 @@ All MARP-Guide events follow a **standard envelope** for traceability, versionin
 ```mermaid
 flowchart TD
   I[Ingestion] -->|DocumentDiscovered| E[Extraction]
+  I[Ingestion] -->|DocumentDiscovered| M[Monitoring]
   E -->|DocumentExtracted| X[Indexing]
-  X -->|ChunksIndexed| R[Retrieval]
-  R -->|RetrievalCompleted| M[Monitoring]
+  E -->|DocumentExtracted| M
+  X -->|ChunksIndexed| M
+  R[Retrieval] -->|RetrievalCompleted| M
   C[Chat] -->|AnswerGenerated| M
 ```

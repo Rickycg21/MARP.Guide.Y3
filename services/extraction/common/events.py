@@ -1,3 +1,4 @@
+import os
 import asyncio
 import json
 import logging
@@ -13,6 +14,9 @@ from common.config import settings
 
 # Dedicated logger for this module; inherits level/format from root (configured in config.py)
 logger = logging.getLogger("events")
+
+EVENT_EXCHANGE_NAME = os.getenv("EVENT_EXCHANGE", "events")
+EVENT_EXCHANGE_TYPE = aio_pika.ExchangeType.DIRECT  # simple routing by eventType
 
 # =============================================================================
 # 1) Event Envelope
@@ -101,8 +105,11 @@ async def _ensure_channel() -> aio_pika.abc.AbstractChannel:
 # =============================================================================
 async def publish_event(event: EventEnvelope) -> None:
     """
-    Serialise an EventEnvelope to JSON and publish it to a durable queue named
-    exactly after its eventType.
+    Serialise an EventEnvelope to JSON and publish it via a shared 'events'
+    exchange using routing_key == eventType.
+
+    This enables true pub/sub: multiple services can declare their own queues
+    and bind them to the same eventType routing key.
 
     Reliability:
       - Durable queue + persistent messages -> survive broker restarts
@@ -110,9 +117,12 @@ async def publish_event(event: EventEnvelope) -> None:
     """
     channel = await _ensure_channel()  # may connect; non-blocking for others
 
-    # declare_queue is idempotent: 
-    # if the queue already exists , nothing happens; if not, it’s created.
-    queue = await channel.declare_queue(event.eventType, durable=True)
+    # Declare or get the shared events exchange.
+    exchange = await channel.declare_exchange(
+        EVENT_EXCHANGE_NAME,
+        type=EVENT_EXCHANGE_TYPE,
+        durable=True,
+    )
 
     # Convert dataclass -> dict -> JSON string -> UTF-8 bytes.
     body = json.dumps(asdict(event), ensure_ascii=False).encode("utf-8")
@@ -131,9 +141,8 @@ async def publish_event(event: EventEnvelope) -> None:
         headers={"eventType": event.eventType, "version": event.version},
     )
 
-    # Publish via the default exchange ("") which routes by exact queue name:
-    # routing_key == queue.name -> deliver directly to that queue.
-    await channel.default_exchange.publish(message, routing_key=queue.name)
+    # Publish to the exchange; routing_key == eventType.
+    await exchange.publish(message, routing_key=event.eventType)
 
     logger.info("Published %s id=%s corr=%s", event.eventType, event.eventId, event.correlationId)
 
@@ -149,7 +158,14 @@ Handler = Callable[[EventEnvelope, AbstractIncomingMessage], Awaitable[None]]
 
 async def consume(event_type: str, handler: Handler) -> None:
     """
-    Subscribe to a queue for the given event_type and process messages forever.
+    Subscribe to the given event_type using a service-specific queue, and
+    process messages forever.
+
+    Each service gets its own queue:
+        {service_name}.{event_type}
+
+    All such queues are bound to the shared 'events' exchange with
+    routing_key == event_type, so multiple services can consume the same event.
 
     The handler is responsible for deciding when to ack()/nack():
       - await message.ack()            -> success, delete from queue
@@ -160,7 +176,21 @@ async def consume(event_type: str, handler: Handler) -> None:
       and nack(requeue=True) so the message isn't lost.
     """
     channel = await _ensure_channel()
-    queue = await channel.declare_queue(event_type, durable=True)
+    # Shared exchange for all events
+    exchange = await channel.declare_exchange(
+        EVENT_EXCHANGE_NAME,
+        type=EVENT_EXCHANGE_TYPE,
+        durable=True,
+    )
+
+    # Queue name is service-specific to avoid competing-consumer semantics
+    # across different services.
+    service = settings.service_name
+    queue_name = f"{service}.{event_type}"
+    queue = await channel.declare_queue(queue_name, durable=True)
+
+    # Bind this queue to events with this event_type
+    await queue.bind(exchange, routing_key=event_type)
 
     # Create an async iterator over incoming messages. This loop yields one
     # message at a time as RabbitMQ delivers them. While awaiting (e.g., waiting

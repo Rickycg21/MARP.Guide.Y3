@@ -1,7 +1,8 @@
 # Monitoring Service
 
 ## Responsibility
-Aggregate and display system health, service metrics, and event throughput for the entire RAG pipeline.
+Provide a Basic Monitoring Dashboard (Tier 1 Feature) that aggregates service health, pipeline event statistics, indexing progress, and request counts.
+It consumes all events produced by the RAG pipeline and exposes a small dashboard showing live system metrics.
 
 ## Data Owned
 - `/data/metrics/events.log` — append-only event log
@@ -15,7 +16,7 @@ Aggregate and display system health, service metrics, and event throughput for t
 | GET | `/health` | Health check | 200 OK |
 
 ## Events
-- **Consumes:** `RetrievalCompleted` & `AnswerGenerated`
+- **Consumes:** `DocumentDiscovered`, `DocumentExtracted`, `ChunksIndexed`, `RetrievalCompleted`, `AnswerGenerated`
 - **Publishes:** *(none)*
 
 ## Communicates With

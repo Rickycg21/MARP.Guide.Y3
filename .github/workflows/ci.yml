@@ -33,20 +33,57 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       #Delete unnecesary tools to free up disk space
-      - name: Free up disk space
+      - name: Free up disk space 
         run: |
-          echo "Cleaning instance space"
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/lib/android"
-          sudo apt clean
+          echo "Cleaning runner disk..."
 
-          # Delete posible unused Docker data
+          # Delete giant frameworks
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
+          # Remove cached Python wheels (Torch + Triton)
+          sudo rm -rf /usr/local/lib/python3.11/site-packages/*torch*
+          sudo rm -rf /usr/local/lib/python3.11/site-packages/triton*
+
+          # Remove pip cache 
+          rm -rf ~/.cache/pip
+
+          # Clear Docker container logs
+          sudo find /var/lib/docker/containers -type f -name "*.log" -delete
+
+          # Remove unused docker images/layers
           docker system prune -af || true
+
+          # Remove old toolcache 
+          sudo rm -rf /opt/hostedtoolcache
+
+          # Remove Ubuntu caches
+          sudo apt-get clean
+          sudo apt-get autoclean
+   
+      #Check disk space after cleanup
+      - name: Check disk space before build
+        run: df -h
+
+      #Check Docker disk usage before building images
+      - name: Docker disk usage before build
+        run: docker system df
+
+      #Prune Docker to free up space before building images
+      - name: Pre-build prune
+        run: docker system prune -af || true
 
       #Build and start the Docker services defined in the docker-compose.ci.yml file
       - name: Start Docker services
         run: docker compose -f docker-compose.yml up -d --build
+
+      #Prune Docker to free up space after building images
+      - name: Prune Docker after build
+        run: |
+          echo "Pruning Docker cache after building images..."
+          docker system prune -af || true
+
 
       # For debugging purposes, show running containers
       - name: Show running containers
@@ -57,8 +94,8 @@ jobs:
         run: |
           echo "Waiting for services to be healthy..."
 
-          # Maximum number of attempts (10 x 5s = 50 seconds total wait time)
-          max_attempts=10
+          # Maximum number of attempts (15 x 5s = 75 seconds total wait time)
+          max_attempts=15
           attempt=1
           while [ $attempt -le $max_attempts ]; do
 
@@ -78,7 +115,7 @@ jobs:
               exit 0
             fi
 
-            sleep 5
+            sleep 4
             attempt=$((attempt + 1))
           done
 
@@ -88,10 +125,16 @@ jobs:
           docker compose logs
           exit 1
 
+      #Check disk space after build
+      - name: Check disk space after build
+        run: df -h
+
+
       #Stop and remove the Docker containers after tests are done
       - name: Stop Docker services
         if: always()
         run: docker compose -f docker-compose.yml down -v
+
 
 
     
